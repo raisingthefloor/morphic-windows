@@ -36,6 +36,7 @@ internal static class SettingsDatabaseProxy
     private static readonly ConcurrentDictionary<string, SettingItemProxy> _settingItemProxies = new();
     private static readonly object _settingItemProxiesLock = new();
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface IGetSettingItemError
     {
         public record CouldNotInstantiateSettingsDatabase(Exception Ex) : IGetSettingItemError;

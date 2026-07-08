@@ -125,6 +125,7 @@ public sealed class RegistryKeyChangeWatcher : IDisposable
     // ancestor walk surprises, etc.) are NOT surfaced here -- they're handled internally and
     // the watcher keeps trying. ICreateError covers only the cases where construction itself
     // can't proceed.
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface ICreateError
     {
         // The supplied path or key was null.

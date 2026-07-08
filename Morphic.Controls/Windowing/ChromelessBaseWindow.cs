@@ -93,26 +93,8 @@ public class ChromelessBaseWindow : Window
         var setWindowPosResult = Windows.Win32.PInvoke.SetWindowPos(hwnd, HWND.Null, 0, 0, 0, 0, SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED | SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
         System.Diagnostics.Debug.Assert(setWindowPosResult);
 
-        // DWMWA_WINDOW_CORNER_PREFERENCE and DWMWA_BORDER_COLOR are Win11-only DWM attributes
-        // (introduced in build 22000). On Win10 the system returns E_INVALIDARG /
-        // ERROR_INVALID_PARAMETER (0x80070057) for either attribute. Skip both calls on Win10:
-        // Win10 doesn't draw rounded top-level window corners or a DWM-managed border in the
-        // first place, so the "don't round" and "no border color" requests are no-ops there
-        // anyway.
-        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == true)
-        {
-            // do not draw the standard rounded corners; this will make the border square, but we'll remove that border in a moment
-            int cornerPreference = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
-            Span<byte> cornerPreferenceAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
-            var setCornerAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
-            System.Diagnostics.Debug.Assert(setCornerAttributeResult == HRESULT.S_OK);
-
-            // set the DWM border color to "none"
-            uint colorNone = 0xFFFFFFFE; // DWMWA_COLOR_NONE
-            Span<byte> colorNoneAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<uint>(ref colorNone));
-            var setBorderAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, colorNoneAsSpan);
-            System.Diagnostics.Debug.Assert(setBorderAttributeResult == HRESULT.S_OK);
-        }
+        // do not round the window corners and do not draw a DWM border
+        this.DisableDwmCornerRoundingAndBorder();
 
         // Extend the DWM frame into the entire client area using the "sheet of glass" pattern
         // (negative margins). This is DWM's modern, documented mechanism for per-pixel-alpha
@@ -223,5 +205,45 @@ public class ChromelessBaseWindow : Window
 		// see: https://learn.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-setwindowsubclass
         var updateSubclassResult = Windows.Win32.PInvoke.SetWindowSubclass(hwnd, _subclassProc!, 0, packed);
         System.Diagnostics.Debug.Assert(updateSubclassResult);
+    }
+
+    // Disables DWM's rounded window corners (DWMWCP_DONOTROUND) and its window border color.
+    // These are Win11-only DWM attributes (introduced in build 22000); on Win10 the system
+    // returns E_INVALIDARG / ERROR_INVALID_PARAMETER (0x80070057) for either attribute, so both
+    // calls are skipped there -- Win10 doesn't draw rounded top-level window corners or a
+    // DWM-managed border in the first place, so the requests are no-ops there anyway.
+    //
+    // NOTE: subclasses that configure their OverlappedPresenter after construction MUST call
+    // this again afterward. Writing presenter properties (IsResizable / IsMinimizable /
+    // IsMaximizable / IsAlwaysOnTop) makes the Windows App SDK re-apply its window
+    // configuration, which sets DWMWA_WINDOW_CORNER_PREFERENCE back to DWMWCP_ROUND (verified
+    // live: the Info panel read back ROUND while the MorphicBar, which does not write presenter
+    // properties post-construction, kept DONOTROUND). On Windows 11 the rounded-corner
+    // treatment bundles a compositor-drawn shadow and border with the rounding, so a clobbered
+    // corner preference re-introduces a window-RECT shadow; through any transparent client
+    // pixels near the window edges (e.g. the Info panel's tail band) it renders as a hazy
+    // semi-transparent rounded band. That shadow is NOT the legacy non-client shadow: it
+    // survives both a window region (SetWindowRgn) and DWMWA_NCRENDERING_ENABLED == false, and
+    // only DWMWCP_DONOTROUND removes it.
+    protected void DisableDwmCornerRoundingAndBorder()
+    {
+        if (Morphic.WindowsNative.OsVersion.OsVersion.IsWindows11OrLater() == false)
+        {
+            return;
+        }
+
+        var hwnd = (HWND)WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+        // do not draw the standard rounded corners (nor their bundled compositor shadow/border)
+        int cornerPreference = (int)Windows.Win32.Graphics.Dwm.DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_DONOTROUND;
+        Span<byte> cornerPreferenceAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<int>(ref cornerPreference));
+        var setCornerAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, Windows.Win32.Graphics.Dwm.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, cornerPreferenceAsSpan);
+        System.Diagnostics.Debug.Assert(setCornerAttributeResult == HRESULT.S_OK);
+
+        // set the DWM border color to "none"
+        uint colorNone = 0xFFFFFFFE; // DWMWA_COLOR_NONE
+        Span<byte> colorNoneAsSpan = System.Runtime.InteropServices.MemoryMarshal.AsBytes(new Span<uint>(ref colorNone));
+        var setBorderAttributeResult = Windows.Win32.PInvoke.DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, colorNoneAsSpan);
+        System.Diagnostics.Debug.Assert(setBorderAttributeResult == HRESULT.S_OK);
     }
 }

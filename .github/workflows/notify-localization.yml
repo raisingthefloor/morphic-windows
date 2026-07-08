@@ -1,0 +1,45 @@
+name: Notify localization on English change
+
+# On a push to dev/2.x that touches the en-US source strings (or a manual run), queue the morphic-localization
+# "English-In" Azure DevOps pipeline (it clones this public repo, ingests the new/changed English, translates
+# it, and opens a review PR in morphic-localization). The only secret is AZDO_PIPELINE_PAT -- an Azure DevOps
+# PAT scoped to Build: Read & execute, stored as a repository Actions secret.
+
+on:
+  push:
+    branches: [dev/2.x]
+    paths:
+      - 'Morphic/Strings/en-US/Resources.resw'   # ONLY an English-source change fires this
+  workflow_dispatch:                              # manual "Run workflow" button, for testing
+
+jobs:
+  queue-english-in:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Queue the localization English-In pipeline (Azure DevOps)
+        env:
+          AZDO_PAT: ${{ secrets.AZDO_PIPELINE_PAT }}
+        run: |
+          if [ -z "$AZDO_PAT" ]; then
+            echo "::error::AZDO_PIPELINE_PAT is empty or not set. Add it under Settings -> Secrets and variables -> Actions -> Repository secrets."
+            exit 1
+          fi
+          echo "PAT length: ${#AZDO_PAT}  (non-zero = the secret reached the runner; the value itself is never printed)"
+
+          # X-TFS-FedAuthRedirect: Suppress makes Azure DevOps return a real 401 instead of a 302 to the
+          # interactive sign-in page, so an auth failure surfaces as an error rather than a misleading success.
+          http_code=$(curl -sS -o response.json -w "%{http_code}" -X POST \
+            -u ":$AZDO_PAT" \
+            -H "Content-Type: application/json" \
+            -H "X-TFS-FedAuthRedirect: Suppress" \
+            "https://dev.azure.com/raisingthefloor/Morphic/_apis/pipelines/34/runs?api-version=7.1" \
+            -d '{"templateParameters": {"productSha": "${{ github.sha }}"}}')
+
+          echo "HTTP $http_code"
+          cat response.json || true
+          echo
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::Queue failed (HTTP $http_code). 401 => PAT invalid, expired, or missing Build(Read & execute); 404 => wrong org/project or pipeline id 34; 302 => FedAuth redirect (auth not accepted)."
+            exit 1
+          fi
+          echo "Queued the English-In pipeline run."

@@ -19,6 +19,7 @@ GetForegroundWindow
 GetMonitorInfo
 GetShellWindow
 GetSysColor
+GetUserDefaultUILanguage
 GetWindowLongPtr
 GetWindowRect
 GetWindowThreadProcessId
@@ -62,6 +63,7 @@ WM_ENDSESSION
 WM_NCHITTEST
 WM_NCLBUTTONDOWN
 WM_QUERYENDSESSION
+WM_WINDOWPOSCHANGED
 WM_SETICON
 WM_SHOWWINDOW
 WNDPROC

@@ -197,6 +197,34 @@ internal static class BarButtonBuilder
         AutomationProperties.SetName(button, data.AccessibleName?.ResolveName(data.IsChecked) ?? data.Text);
         ToolTipService.SetToolTip(button, data.Tooltip);
 
+        // Right-click / context-menu-key flyout, built from the button's data. Null when the button has no menu
+        // items (e.g. Snip), so ContextFlyout stays unset and no menu appears. This covers single buttons AND
+        // multi-button sub-buttons (both route through here); the bar's menu/close chrome are not built here, so
+        // they get no context menu.
+        var contextFlyout = BarButtonContextMenuBuilder.Build(data);
+        if (contextFlyout is not null)
+        {
+            // ATTACH the flyout (do NOT set ContextFlyout): ContextFlyout would auto-show at the pointer, but we
+            // want the logo-menu-style edge-anchored, away-from-bar placement. MorphicBarWindow handles
+            // ContextRequested centrally and shows this attached flyout positioned (see OnBarItemContextRequested).
+            Microsoft.UI.Xaml.Controls.Primitives.FlyoutBase.SetAttachedFlyout(button, contextFlyout);
+        }
+
+        // Stash the hover Info content on the button so a sub-button shows its OWN info (e.g. each Contrast/Color/
+        // Dark/Night toggle, or the +/- , Show/Hide, Play/Stop halves), resolved by MorphicBarWindow walking up from
+        // the pointer -- the button is the NEAREST ancestor with content, so it wins over the group. Only when a
+        // description is authored; a sub-button without one falls through to the group's Info content. The right-
+        // click Settings hint is set as a separate footer line when this button has a Settings menu (SettingsPage,
+        // possibly inherited).
+        if (string.IsNullOrWhiteSpace(data.InfoSubtitle) == false)
+        {
+            var infoTitle = string.IsNullOrEmpty(data.InfoTitle)
+                ? (string.IsNullOrEmpty(data.Header) ? data.Text : data.Header!)
+                : data.InfoTitle!;
+            var infoHint = Morphic.MorphicBar.Info.BarInfo.SettingsHint(data.SettingsPage is not null);
+            Morphic.MorphicBar.Info.BarInfo.SetContent(button, new Morphic.MorphicBar.Info.BarInfoContent(infoTitle, data.InfoSubtitle, data.InfoDotsProvider, infoHint));
+        }
+
         return button;
     }
 

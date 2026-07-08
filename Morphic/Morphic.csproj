@@ -91,6 +91,21 @@
     <Content Include="Assets\Icons\morphic-standardcontrast.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- Localization string resources. Each Strings\<bcp47>\Resources.resw is compiled into the
+       per-assembly Morphic.pri; the per-language FOLDER name (en-US, es, ...) supplies the Language
+       qualifier. Runtime resolution: the unpackaged MSI path merges Morphic.pri into a single
+       resources.pri via finalize-winui-publish.ps1 (and package-msix.ps1 for MSIX); the MSIX manifest
+       auto-indexes languages via <Resource Language="x-generate"/>. PRIResource is the item type the
+       WindowsAppSDK PRI targets consume; we Remove the default None glob so the same files are not
+       double-included. New language folders under Strings\ are picked up automatically. -->
+  <ItemGroup>
+    <None Remove="Strings\**\*.resw" />
+    <PRIResource Include="Strings\**\*.resw" />
+    <!-- The en-US .resw is the authoritative key set for the Morphic.Localization.Strings source
+         generator; expose it to analyzers as an AdditionalFile (other languages aren't needed by it). -->
+    <AdditionalFiles Include="Strings\en-US\Resources.resw" />
+  </ItemGroup>
+
 	
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
@@ -155,6 +170,17 @@
     </ProjectReference>
     <ProjectReference Include="..\Morphic.Notifications\Morphic.Notifications.csproj" />
     <ProjectReference Include="..\Morphic.WindowsNative\Morphic.WindowsNative.csproj" />
+    <!-- Roslyn source generator that emits Morphic.Localization.Strings (one typed property per key in
+         Strings\en-US\Resources.resw). OutputItemType=Analyzer + ReferenceOutputAssembly=false: it runs
+         at compile time only and is NOT a runtime dependency / not shipped in any installer.
+         SetPlatform=Platform=AnyCPU is REQUIRED: this csproj builds for x64/ARM64, but the generator is a
+         platform-neutral netstandard2.0 analyzer. Without pinning the reference to AnyCPU, the ARM64
+         build's platform negotiation fails to resolve the analyzer (the x64 build happens to work), so
+         the generator never runs and every Morphic.Localization.Strings use breaks with CS0234. -->
+    <ProjectReference Include="..\Morphic.Localization.SourceGenerator\Morphic.Localization.SourceGenerator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      SetPlatform="Platform=AnyCPU" />
   </ItemGroup>
 
   <ItemGroup>
@@ -177,6 +203,9 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="MorphicBar\BarControls\BarMultiButtonControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="MorphicBar\Info\InfoPanelWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
@@ -270,6 +299,23 @@
       <PostInstallLauncherPublishOutputs Include="..\Morphic.PostInstallLauncher\bin\$(Platform)\$(Configuration)\$(TargetFramework)\win-$(Platform.ToLower())\PostInstallLauncher.*" />
     </ItemGroup>
     <Copy SourceFiles="@(PostInstallLauncherPublishOutputs)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Dev (F5) resources.pri for the UNPACKAGED build. MRT Core's default ResourceLoader and XAML
+       x:Uid load resources.pri from the app directory at runtime, but the build only emits the
+       per-assembly Morphic.pri (the merge into resources.pri is done at publish by
+       finalize-winui-publish.ps1, and for MSIX by package-msix.ps1). Without this, localized strings
+       do not resolve on an F5 dev run. This target runs the shared merge-resources-pri.ps1 (same
+       makepri/priconfig as those scripts; keep in sync) against the build output. Scoped to plain
+       Debug only: Release ships via publish+finalize, and -Packaged (MSIX) builds produce their own
+       resources.pri, so this must not touch those paths. Incremental on Morphic.pri so code-only
+       rebuilds skip the merge. -->
+  <Target Name="MergeResourcesPriForUnpackagedDev"
+          AfterTargets="Build"
+          Condition="$(Configuration.Contains('Debug')) and !$(Configuration.EndsWith('-Packaged'))"
+          Inputs="$(OutDir)Morphic.pri"
+          Outputs="$(OutDir)resources.pri">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\merge-resources-pri.ps1&quot; -Dir &quot;$(MSBuildThisFileDirectory)$(OutDir).&quot;" />
   </Target>
 
 </Project>

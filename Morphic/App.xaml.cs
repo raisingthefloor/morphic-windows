@@ -40,6 +40,13 @@ namespace Morphic;
 /// </summary>
 public partial class App : Application
 {
+    // Copyright year range surfaced by the app (e.g. the About box). Centralized here as the single
+    // source of truth; bump COPYRIGHT_END_YEAR per release. The years are deliberately kept OUT of the
+    // translatable CopyrightNoticeFormat string -- the About box injects this range into that string's
+    // {0} placeholder (see AboutWindow.CopyrightDisplayString).
+    internal const int COPYRIGHT_START_YEAR = 2020;
+    internal const int COPYRIGHT_END_YEAR = 2026;
+
     // NOTE: we initialize this when the application starts up
     internal Morphic.Controls.TrayButton.TrayButton TaskbarButton = null!;
 
@@ -79,6 +86,15 @@ public partial class App : Application
     /// </summary>
     public App()
     {
+        // Pin the app's MRT resource language to the user's top preferred UI language, with en-US as the
+        // GUARANTEED fallback, so a string missing in that language can NEVER resolve to another installed
+        // language (we saw German leak into a Spanish session). See ResourceLanguage.cs.
+        //
+        // DO NOT MOVE THIS BELOW InitializeComponent. InitializeComponent loads App.xaml's resources and
+        // initializes MRT Core's resolution context; once that context is cached, PrimaryLanguageOverride is
+        // ignored. It has to be the first statement in the ctor, before any resource is touched.
+        Morphic.Localization.ResourceLanguage.ApplyDisplayLanguageWithEnglishFallback();
+
         this.InitializeComponent();
 
 		// capture shutdown events (to clean up the tray icon, etc.)
@@ -154,6 +170,11 @@ public partial class App : Application
         (_menuOwnerWindow.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter)?.IsAlwaysOnTop = true;
         _menuOwnerWindow.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(-10000, -10000, 0, 0)); // move off the main screen (unnecessary, but good for VS debugging so we don't get GUI debug overlays), make it zero pixels in size (also unnecessary, but a safeguard)
         _menuOwnerWindow.AppWindow.Show();
+
+        // Pre-warm the main menu's width now that its owner window exists, so the menu's FIRST right-to-left
+        // open is positioned exactly. The menu is placed by absolute coordinate minus its own width; without
+        // this the first open would use an estimate (then self-correct). No-op in left-to-right sessions.
+        App.MainMenu.PrewarmWidth(_menuOwnerWindow);
 
         // Construct the MorphicBarWindow and do all one-time setup before handing it to MorphicBarManager.
         // The local `morphicBarWindow` reference goes out of scope after the manager takes it; App keeps
@@ -584,7 +605,7 @@ public partial class App : Application
         }
         try
         {
-            this.TaskbarButton.Text = _morphicBarManager.IsBarVisible ? "Hide MorphicBar" : "Show MorphicBar";
+            this.TaskbarButton.Text = _morphicBarManager.IsBarVisible ? Morphic.Localization.Strings.HideMorphicBar : Morphic.Localization.Strings.ShowMorphicBar;
         }
         catch (System.Runtime.InteropServices.COMException)
         {

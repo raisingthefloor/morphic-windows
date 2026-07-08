@@ -25,10 +25,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Win32;
 
 namespace Morphic.MorphicBar;
 
@@ -38,6 +34,21 @@ internal class MorphicMainMenu
 
     MenuFlyoutItem _showMorphicBarMenuItem;
     MenuFlyoutItem _hideMorphicBarMenuItem;
+
+    // === RTL menu placement: cached menu width (DIPs) ===
+    //
+    // Under RTL the menu opens to the LEFT of the click (native RTL behavior). A flyout's Position is ALWAYS its
+    // top-LEFT corner regardless of FlowDirection, so Show() shifts the position left by the menu's own width so
+    // its RIGHT edge lands at the click. The width depends on which of Show/Hide MorphicBar is the visible item --
+    // those two strings can differ a LOT in width across languages (only coincidentally similar in English) -- so
+    // we cache the two configurations SEPARATELY and measure BOTH (see MeasureWidthInvisibly): up front at startup
+    // (PrewarmWidth) and again on any item change (RefreshWidth). Widths are in DIPs, which are scale-independent
+    // (a DPI change does not invalidate them).
+    private double _cachedWidthWhenBarVisibleInDips = 0.0;   // the "Hide MorphicBar" item is the one showing
+    private double _cachedWidthWhenBarHiddenInDips = 0.0;    // the "Show MorphicBar" item is the one showing
+    private const double DEFAULT_MENU_WIDTH_ESTIMATE_IN_DIPS = 200.0;
+    // The menu-owner window, captured by PrewarmWidth so RefreshWidth can re-measure later without re-passing it.
+    private Microsoft.UI.Xaml.Window? _ownerWindowForMeasuring = null;
 
     public event EventHandler<EventArgs>? AboutMorphicMenuItemClicked;
     public event EventHandler<EventArgs>? HideMorphicBarMenuItemClicked;
@@ -53,17 +64,64 @@ internal class MorphicMainMenu
         var padding = new Thickness(11, 4, 11, 5);
 
         // NOTE: Show/Hide MorphicBar are mutually exclusive; only one will be visible at any given time
-        _showMorphicBarMenuItem = new MenuFlyoutItem { Text = "Show MorphicBar", Padding = padding, MinHeight = 0 };
+        _showMorphicBarMenuItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.ShowMorphicBar, Padding = padding, MinHeight = 0 };
         _showMorphicBarMenuItem.Click += (s, _) => { this.ShowMorphicBarMenuItemClicked?.Invoke(s, EventArgs.Empty); };
         menuFlyout.Items.Add(_showMorphicBarMenuItem);
         //
-        _hideMorphicBarMenuItem = new MenuFlyoutItem { Text = "Hide MorphicBar", Padding = padding, MinHeight = 0 };
+        _hideMorphicBarMenuItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.HideMorphicBar, Padding = padding, MinHeight = 0 };
         _hideMorphicBarMenuItem.Click += (s, _) => { this.HideMorphicBarMenuItemClicked?.Invoke(s, EventArgs.Empty); };
         menuFlyout.Items.Add(_hideMorphicBarMenuItem);
 
         menuFlyout.Items.Add(new MenuFlyoutSeparator());
 
-        var aboutMorphicMenuItem = new MenuFlyoutItem { Text = "About Morphic...", Padding = padding, MinHeight = 0 };
+        // "More settings to make the computer easier" (OS accessibility-related settings) submenu. The
+        // accessibility-link items are sorted ALPHABETICALLY in the app's display language (so accented and
+        // non-Latin labels order the way that language expects -- see ResourceLanguage.CurrentDisplayCulture),
+        // then a separator, then "All Accessibility Settings" which always stays last as the catch-all.
+        var moreSettingsMenuItem = new MenuFlyoutSubItem { Text = Morphic.Localization.Strings.MoreSettingsToMakeComputerEasierMenuItem, Padding = padding, MinHeight = 0 };
+
+        // The accessibility links shown ABOVE the separator: the localized label + the Windows Settings page each
+        // opens. Authored in any order -- sorted below. The ms-settings: targets live in WindowsSettings (one
+        // source), shared with the future MorphicBar-button right-click "Settings" entries.
+        var accessibilityLinks = new (string text, Morphic.SystemSettings.WindowsSettings.Page page)[]
+        {
+            (Morphic.Localization.Strings.OsMagnifierSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Magnifier),
+            (Morphic.Localization.Strings.OsReadAloudSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.ReadAloud),
+            (Morphic.Localization.Strings.OsColorVisionSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.ColorVision),
+            (Morphic.Localization.Strings.OsNightModeSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.NightLight),
+            (Morphic.Localization.Strings.OsDarkModeSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.DarkMode),
+            (Morphic.Localization.Strings.OsContrastSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Contrast),
+            (Morphic.Localization.Strings.OsVoiceSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Voice),
+            (Morphic.Localization.Strings.OsMouseSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Mouse),
+            (Morphic.Localization.Strings.OsPointerSizeSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.PointerSize),
+            (Morphic.Localization.Strings.OsKeyboardSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Keyboard),
+            (Morphic.Localization.Strings.OsLanguageSettingsMenuItem, Morphic.SystemSettings.WindowsSettings.Page.Language),
+        };
+
+        // Sort by the localized label using the DISPLAY LANGUAGE's collation (not ordinal, not the OS UI culture):
+        // this is what makes the order correct for internationalized strings -- e.g. Swedish places "Ö" after "Z",
+        // German treats "Ö" like "O". Array.Sort with a Comparison keeps this LINQ-free (no extra using).
+        var displayLanguageComparer = System.StringComparer.Create(Morphic.Localization.ResourceLanguage.CurrentDisplayCulture, ignoreCase: true);
+        System.Array.Sort(accessibilityLinks, (firstLink, secondLink) => displayLanguageComparer.Compare(firstLink.text, secondLink.text));
+        foreach (var link in accessibilityLinks)
+        {
+            var settingsPage = link.page;   // capture per iteration for the click closure
+            var linkItem = new MenuFlyoutItem { Text = link.text, Padding = padding, MinHeight = 0 };
+            linkItem.Click += (s, e) => { _ = Morphic.SystemSettings.WindowsSettings.Open(settingsPage); };
+            moreSettingsMenuItem.Items.Add(linkItem);
+        }
+
+        moreSettingsMenuItem.Items.Add(new MenuFlyoutSeparator());
+        // Always LAST (below the separator): the catch-all link to the full Windows accessibility settings hub.
+        var allAccessibilityItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.OsAllAccessibilityOptionsMenuItem, Padding = padding, MinHeight = 0 };
+        allAccessibilityItem.Click += (s, e) => { _ = Morphic.SystemSettings.WindowsSettings.Open(Morphic.SystemSettings.WindowsSettings.Page.AllAccessibility); };
+        moreSettingsMenuItem.Items.Add(allAccessibilityItem);
+
+        menuFlyout.Items.Add(moreSettingsMenuItem);
+
+        menuFlyout.Items.Add(new MenuFlyoutSeparator());
+
+        var aboutMorphicMenuItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.AboutMorphicMenuItem, Padding = padding, MinHeight = 0 };
         aboutMorphicMenuItem.KeyboardAccelerators.Add(new Microsoft.UI.Xaml.Input.KeyboardAccelerator
         {
             Key = Windows.System.VirtualKey.A,
@@ -72,7 +130,7 @@ internal class MorphicMainMenu
         aboutMorphicMenuItem.Click += (s, _) => { this.AboutMorphicMenuItemClicked?.Invoke(s, EventArgs.Empty); };
         menuFlyout.Items.Add(aboutMorphicMenuItem);
 
-        var quitMorphicMenuItem = new MenuFlyoutItem { Text = "Quit Morphic", /*Icon = new SymbolIcon(Symbol.Paste), */Padding = padding, MinHeight = 0 };
+        var quitMorphicMenuItem = new MenuFlyoutItem { Text = Morphic.Localization.Strings.QuitMorphic, /*Icon = new SymbolIcon(Symbol.Paste), */Padding = padding, MinHeight = 0 };
         quitMorphicMenuItem.KeyboardAccelerators.Add(new Microsoft.UI.Xaml.Input.KeyboardAccelerator
         {
             Key = Windows.System.VirtualKey.Q,
@@ -81,7 +139,31 @@ internal class MorphicMainMenu
         quitMorphicMenuItem.Click += (s, _) => { this.QuitMorphicMenuItemClicked?.Invoke(s, EventArgs.Empty); };
         menuFlyout.Items.Add(quitMorphicMenuItem);
 
+        // Mirror the menu CONTENT for an RTL app language. A MenuFlyout presenter does not inherit
+        // FlowDirection from its ShowAt placement target (the tray menu's owner is a utility window, not the
+        // RTL bar; even the logo menu's RTL bar target does not propagate it), so set it explicitly. CONTENT
+        // axis -> the APP language (ReadingDirection.SessionFlowDirection), consistent with the bar/About box.
+        //
+        // Set it on TWO layers: the ITEMS (so their text right-aligns + accelerators flip) and the PRESENTER (so
+        // the box's own content lays out RTL). NOTE: this does NOT control which side the box opens on -- a flyout
+        // always anchors at its top-LEFT corner; the leftward open is done by the width offset in Show(). The
+        // presenter style adds only a FlowDirection setter, so it keeps its default theme template/appearance.
+        foreach (var menuFlyoutItemElement in menuFlyout.Items)
+        {
+            menuFlyoutItemElement.FlowDirection = Morphic.Localization.ReadingDirection.SessionFlowDirection;
+        }
+        if (Morphic.Localization.ReadingDirection.SessionFlowDirection == FlowDirection.RightToLeft)
+        {
+            var rightToLeftPresenterStyle = new Style(typeof(MenuFlyoutPresenter));
+            rightToLeftPresenterStyle.Setters.Add(new Setter(FrameworkElement.FlowDirectionProperty, FlowDirection.RightToLeft));
+            menuFlyout.MenuFlyoutPresenterStyle = rightToLeftPresenterStyle;
+        }
+
         _menuFlyout = menuFlyout;
+        // Safety-net width re-cache on every open (see MenuFlyout_Opened) -- covers menu-width DRIFT with no item
+        // change, e.g. a runtime high-contrast / text-size change that re-sizes the menu text (PrewarmWidth /
+        // RefreshWidth would not catch that, and this menu is a singleton so it is never rebuilt).
+        _menuFlyout.Opened += this.MenuFlyout_Opened;
     }
 
     // NOTE: owner will be used both to capture a XAML root (required to show the menu) and also to know which MorphicBar to show/hide.
@@ -115,6 +197,20 @@ internal class MorphicMainMenu
         var rasterizationScale = root.XamlRoot.RasterizationScale;
         double relativeX = (x - ownerPosition.X) / rasterizationScale;
         double relativeY = (y - ownerPosition.Y) / rasterizationScale;
+
+        // Under RTL the menu opens to the LEFT of the click (native RTL behavior). A flyout's Position is
+        // always its top-LEFT corner regardless of FlowDirection, so shift it left by the menu's width to put
+        // the box's RIGHT edge at the click. The width depends on which Show/Hide item is showing; both are
+        // pre-measured (PrewarmWidth). A first RTL show before measuring finishes falls back to an estimate.
+        if (Morphic.Localization.ReadingDirection.AppIsRightToLeft == true)
+        {
+            double menuWidthInDips = (morphicBarIsVisible == true) ? _cachedWidthWhenBarVisibleInDips : _cachedWidthWhenBarHiddenInDips;
+            if (menuWidthInDips <= 0.0)
+            {
+                menuWidthInDips = MorphicMainMenu.DEFAULT_MENU_WIDTH_ESTIMATE_IN_DIPS;
+            }
+            relativeX -= menuWidthInDips;
+        }
 
         // Restore focus to returnFocusTo ONLY if the menu was dismissed without the user choosing
         // an item (ESC, click-outside, etc.). If they clicked a menu item, that item's handler
@@ -163,5 +259,160 @@ internal class MorphicMainMenu
             Position = new Windows.Foundation.Point(relativeX, relativeY),
             ShowMode = FlyoutShowMode.Standard
         });
+    }
+
+    // Pre-measures BOTH configurations' widths ONCE at startup so the menu's first RTL open is already exact.
+    // Delegates to MeasureWidthInvisibly (a single synchronous show); RefreshWidth re-runs the same measure when
+    // the items change. No-op in LTR (no offset is applied); if the owner content is not laid out yet, waits for
+    // Loaded.
+    public void PrewarmWidth(Microsoft.UI.Xaml.Window ownerWindow)
+    {
+        _ownerWindowForMeasuring = ownerWindow;
+        if (Morphic.Localization.ReadingDirection.AppIsRightToLeft == false)
+        {
+            return;
+        }
+        if (ownerWindow.Content is not FrameworkElement ownerContent)
+        {
+            return;
+        }
+        if (ownerContent.XamlRoot is null)
+        {
+            ownerContent.Loaded += this.OwnerContentLoaded_PrewarmWidth;
+            return;
+        }
+        this.MeasureWidthInvisibly(ownerContent);
+    }
+
+    private void OwnerContentLoaded_PrewarmWidth(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement ownerContent)
+        {
+            return;
+        }
+        ownerContent.Loaded -= this.OwnerContentLoaded_PrewarmWidth;
+        if (ownerContent.XamlRoot is not null)
+        {
+            this.MeasureWidthInvisibly(ownerContent);
+        }
+    }
+
+    // Re-measures both configurations' widths so RTL placement is exact on the FIRST open after a menu-item
+    // change. Call whenever the menu's items change. Uses the SYNCHRONOUS measure (one show; both configs read
+    // in a single block with no message pump in between), which keeps the bar's activation-loss to a blink --
+    // unlike an async runtime show, whose ~150ms+ deactivation window swallowed the next click. Falls back to
+    // invalidation (re-learned lazily on the next real open) if no owner window is available. No-op in LTR.
+    public void RefreshWidth()
+    {
+        if (Morphic.Localization.ReadingDirection.AppIsRightToLeft == false)
+        {
+            return;
+        }
+        if (_ownerWindowForMeasuring?.Content is FrameworkElement ownerContent && ownerContent.XamlRoot is not null)
+        {
+            this.MeasureWidthInvisibly(ownerContent);
+        }
+        else
+        {
+            _cachedWidthWhenBarVisibleInDips = 0.0;
+            _cachedWidthWhenBarHiddenInDips = 0.0;
+        }
+    }
+
+    // Measures BOTH configurations' widths so the FIRST RTL open of either is exact. Does it SYNCHRONOUSLY: shows
+    // the flyout with an invisible (Opacity 0) presenter, then -- within ONE show and ONE synchronous block (no
+    // message pump in between) -- reads the bar-visible width, toggles the Show/Hide item, re-lays-out, and reads
+    // the bar-hidden width. Synchronous matters two ways: (1) no async Opened to lose the race to a fast first
+    // click, and (2) the bar's activation loss stays a blink, so a RUNTIME call (RefreshWidth) does not eat the
+    // next click the way an async show did. No frame ever renders the menu -> no flash.
+    private void MeasureWidthInvisibly(FrameworkElement ownerContent)
+    {
+        var savedShowMenuItemVisibility = _showMorphicBarMenuItem.Visibility;
+        var savedHideMenuItemVisibility = _hideMorphicBarMenuItem.Visibility;
+        var savedPresenterStyle = _menuFlyout.MenuFlyoutPresenterStyle;
+
+        var invisiblePresenterStyle = new Style(typeof(MenuFlyoutPresenter));
+        invisiblePresenterStyle.Setters.Add(new Setter(UIElement.OpacityProperty, 0.0));
+        invisiblePresenterStyle.Setters.Add(new Setter(FrameworkElement.FlowDirectionProperty, Morphic.Localization.ReadingDirection.SessionFlowDirection));
+        _menuFlyout.MenuFlyoutPresenterStyle = invisiblePresenterStyle;
+
+        // Begin with the bar-visible (Hide showing) configuration.
+        _showMorphicBarMenuItem.Visibility = Visibility.Collapsed;
+        _hideMorphicBarMenuItem.Visibility = Visibility.Visible;
+
+        _menuFlyout.ShowAt(ownerContent, new FlyoutShowOptions
+        {
+            Position = new Windows.Foundation.Point(0, 0),
+            ShowMode = FlyoutShowMode.Transient
+        });
+
+        var menuFlyoutPresenter = this.FindOpenMenuPresenter();
+        if (menuFlyoutPresenter is not null)
+        {
+            // Measure the bar-visible configuration.
+            menuFlyoutPresenter.InvalidateMeasure();
+            menuFlyoutPresenter.UpdateLayout();
+            if (menuFlyoutPresenter.ActualWidth > 0.0)
+            {
+                _cachedWidthWhenBarVisibleInDips = menuFlyoutPresenter.ActualWidth;
+            }
+
+            // Switch to the bar-hidden (Show showing) configuration and re-measure -- still within this one show.
+            _showMorphicBarMenuItem.Visibility = Visibility.Visible;
+            _hideMorphicBarMenuItem.Visibility = Visibility.Collapsed;
+            menuFlyoutPresenter.InvalidateMeasure();
+            menuFlyoutPresenter.UpdateLayout();
+            if (menuFlyoutPresenter.ActualWidth > 0.0)
+            {
+                _cachedWidthWhenBarHiddenInDips = menuFlyoutPresenter.ActualWidth;
+            }
+        }
+
+        _menuFlyout.MenuFlyoutPresenterStyle = savedPresenterStyle;
+        _showMorphicBarMenuItem.Visibility = savedShowMenuItemVisibility;
+        _hideMorphicBarMenuItem.Visibility = savedHideMenuItemVisibility;
+        _menuFlyout.Hide();
+    }
+
+    // Finds the menu's currently-open presenter (a MenuFlyout does not expose it directly) among the open popups
+    // for the flyout's XamlRoot, or null if not found.
+    private MenuFlyoutPresenter? FindOpenMenuPresenter()
+    {
+        var xamlRoot = _menuFlyout.XamlRoot;
+        if (xamlRoot is null)
+        {
+            return null;
+        }
+        foreach (var openPopup in Microsoft.UI.Xaml.Media.VisualTreeHelper.GetOpenPopupsForXamlRoot(xamlRoot))
+        {
+            if (openPopup.Child is MenuFlyoutPresenter menuFlyoutPresenter)
+            {
+                return menuFlyoutPresenter;
+            }
+        }
+        return null;
+    }
+
+    // Safety net (see ctor subscription): on every real open, re-cache the presenter's actual width into the slot
+    // for whichever Show/Hide item is currently showing, so width drift from a runtime display change (high
+    // contrast, system text size) self-heals on the next open. PrewarmWidth/RefreshWidth already fill both slots
+    // for normal cases; this is only for drift that happens WITHOUT an item change. (It does not run during the
+    // invisible measure: that show+hide is synchronous, so the flyout never actually opens and Opened never fires.)
+    private void MenuFlyout_Opened(object? sender, object e)
+    {
+        var menuFlyoutPresenter = this.FindOpenMenuPresenter();
+        if (menuFlyoutPresenter is null || menuFlyoutPresenter.ActualWidth <= 0.0)
+        {
+            return;
+        }
+        // bar VISIBLE => the "Hide MorphicBar" item is the one showing.
+        if (_hideMorphicBarMenuItem.Visibility == Visibility.Visible)
+        {
+            _cachedWidthWhenBarVisibleInDips = menuFlyoutPresenter.ActualWidth;
+        }
+        else
+        {
+            _cachedWidthWhenBarHiddenInDips = menuFlyoutPresenter.ActualWidth;
+        }
     }
 }

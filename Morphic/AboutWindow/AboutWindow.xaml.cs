@@ -37,6 +37,14 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
     // actually renders at to get a physical size that fits the XAML content on any display.
     private const int DESIGN_WIDTH_DIPS = 308;
     private const int DESIGN_HEIGHT_DIPS = 280;
+    // Per-side breathing room between the widest content line (the copyright) and the window border. The
+    // copyright nearly fills the old design width in EVERY language (~286 of 308 DIPs), so we size the frame
+    // to copyright + this margin rather than a fixed 308. Otherwise the copyright sits only ~12 DIPs from the
+    // edge and looks cramped -- the "clip" reported in Arabic was actually this tight fit (the string measured
+    // 286 DIPs and DID fit), not a true overflow. At 20 this gives a comfortable, uniform gap; it does widen
+    // the box a little in every language vs the old fixed 308 -- a deliberate trade (you can't give the
+    // copyright more room without a wider box, since it is nearly box-width in all languages). Tune here.
+    private const int CONTENT_SIDE_MARGIN_DIPS = 20;
 
     // The monitor the box should be sized + centered on (the launch monitor; see CenterOnMonitor).
     private Windows.Win32.Graphics.Gdi.HMONITOR _targetMonitorHandle;
@@ -50,7 +58,7 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
     {
         get
         {
-            return $"version {_applicationVersion.Value.Major}.{_applicationVersion.Value.Minor}";
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, Morphic.Localization.Strings.AboutVersionFormat, _applicationVersion.Value.Major, _applicationVersion.Value.Minor);
         }
     }
     //
@@ -59,15 +67,38 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         get
         {
             var applicationVersion = Assembly.GetExecutingAssembly().GetName().Version!;
-            return applicationVersion.Build != 0 ? $"(build {applicationVersion.Build})" : "(build unknown)";
+            return applicationVersion.Build != 0 ? string.Format(System.Globalization.CultureInfo.InvariantCulture, Morphic.Localization.Strings.AboutBuildFormat, applicationVersion.Build) : Morphic.Localization.Strings.AboutBuildUnknown;
+        }
+    }
+    //
+    // Copyright notice with the year range injected from code (so the years are not part of the
+    // translatable string). CopyrightNoticeFormat = "Copyright {0} Raising the Floor - US, Inc.".
+    public string CopyrightDisplayString
+    {
+        get
+        {
+            var yearRange = Morphic.App.COPYRIGHT_START_YEAR.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                + "-" + Morphic.App.COPYRIGHT_END_YEAR.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return string.Format(Morphic.Localization.Strings.CopyrightNoticeFormat, yearRange);
         }
     }
 
     public AboutWindow()
     {
         InitializeComponent();
+
+        // Mirror the window layout for right-to-left UI languages: WinUI renders translated text but does
+        // not flip layout from the language, so drive FlowDirection off the session display language.
+        Morphic.Localization.ReadingDirection.ApplyTo(this);
+        // Also mirror the title-bar CHROME (caption buttons move to the left) for an RTL app language. Set
+        // here, before the window is shown, so the frame is computed mirrored.
+        Morphic.Localization.ReadingDirection.ApplyChromeMirroringTo(this);
+
         // NOTE: we should call base.SwitchToWinUIThemeTracking() after InitializeComponent (to switch from Win32 theme tracking to WinUI theme tracking)
         base.SwitchToWinUIThemeTracking();
+
+        // Window.Title cannot be set via x:Uid, so apply the localized title from code.
+        this.Title = Morphic.Localization.Strings.AboutWindowTitle;
 
         // capture theme changes so we can update our iconography
         base.ThemeChanged += AboutWindow_ThemeChanged;
@@ -172,7 +203,28 @@ public sealed partial class AboutWindow : Morphic.Controls.Theme.ThemeAwareBaseW
         }
         _lastAppliedRasterizationScale = rasterizationScale;
 
-        var width = (int)System.Math.Round(AboutWindow.DESIGN_WIDTH_DIPS * rasterizationScale);
+        // Width fits the actual content. The copyright line is the widest element and has no TextWrapping,
+        // so a translation that renders it wider than the design width (e.g. Arabic) would otherwise overflow
+        // the fixed frame and clip. Measure the copyright on a DETACHED probe TextBlock (reliable regardless
+        // of the live window root's layout state -- the same approach BarHeaderText uses) and grow the frame
+        // to fit it plus a side margin, never going BELOW the design width (so English / short languages are
+        // unchanged). Widths are in DIPs, matching DESIGN_WIDTH_DIPS.
+        double contentWidthDips = AboutWindow.DESIGN_WIDTH_DIPS;
+        var copyrightProbe = new Microsoft.UI.Xaml.Controls.TextBlock
+        {
+            FontSize = 12,
+            Text = this.CopyrightDisplayString,
+            TextWrapping = Microsoft.UI.Xaml.TextWrapping.NoWrap,
+        };
+        copyrightProbe.Measure(new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
+        if (copyrightProbe.DesiredSize.Width > 0.0)
+        {
+            contentWidthDips = System.Math.Max(
+                AboutWindow.DESIGN_WIDTH_DIPS,
+                copyrightProbe.DesiredSize.Width + (2 * AboutWindow.CONTENT_SIDE_MARGIN_DIPS));
+        }
+
+        var width = (int)System.Math.Round(contentWidthDips * rasterizationScale);
         var height = (int)System.Math.Round(AboutWindow.DESIGN_HEIGHT_DIPS * rasterizationScale);
 
         // Center within the target monitor's WORK area (excludes the taskbar), in physical pixels.

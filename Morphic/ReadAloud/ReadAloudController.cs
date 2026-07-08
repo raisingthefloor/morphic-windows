@@ -210,7 +210,7 @@ internal sealed class ReadAloudController : System.IDisposable
                     // FUTURE: replace this toast with the near-the-bar "always on top" notification popup
                     // (design captured in memory), which can also offer a "clear clipboard and retry" action
                     // that App Notifications cannot.
-                    Morphic.Notifications.ToastNotifications.ShowText("Read Selected", "Morphic wasn't able to capture the selected text.");
+                    Morphic.Notifications.ToastNotifications.ShowText(Morphic.Localization.Strings.ReadSelectedHeader, Morphic.Localization.Strings.ReadSelectedCaptureFailedMessage);
                 }
                 return;
             }

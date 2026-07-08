@@ -61,13 +61,10 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
     }
 
     // Layout orientation propagated by the MorphicBar.
-    // The control stores the value; Horizontal and Vertical render identically because a single
-    // TextOnly button fills whatever width/height its parent allocates. So orientation change does
-    // NOT rebuild the button -- rebuilding would tear down the live ToggleButton instance and lose
-    // its IsChecked state and any in-progress action visual. When width-/height-dependent behaviors
-    // are added (e.g. different max-width handling for a vertical bar), they should branch on this
-    // property via the validating switch in ApplyData AND, if rebuild is unavoidable, the orientation
-    // setter should preserve the live ToggleButton's IsChecked + tracker state across the rebuild.
+    // Orientation does NOT rebuild the button -- rebuilding would tear down the live ToggleButton instance
+    // and lose its IsChecked state and any in-progress action visual. The one orientation-dependent visual is
+    // the button's HorizontalAlignment (see ApplyButtonHorizontalAlignmentForOrientation), updated in place
+    // here on a flip without a rebuild.
     public Orientation Orientation
     {
         get => _orientation;
@@ -78,6 +75,7 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
                 return;
             }
             _orientation = value;
+            this.ApplyButtonHorizontalAlignmentForOrientation();
         }
     }
 
@@ -100,6 +98,7 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
         {
             this.HeaderTextBlock.Text = string.Empty;
             this.HeaderTextBlock.Visibility = Visibility.Collapsed;
+            Morphic.MorphicBar.Info.BarInfo.SetContent(this, null);
             return;
         }
 
@@ -147,5 +146,28 @@ public sealed partial class BarButtonControl : UserControl, IBarItemControl
 
         this.RootContainer.Children.Add(button);
         _button = button;
+        this.ApplyButtonHorizontalAlignmentForOrientation();
+
+        // The hover Info panel is shown for the BUTTON only, NOT the header above it: we deliberately do NOT stash
+        // Info content on this control (a header hover would otherwise resolve to it via the pointer walk-up). The
+        // button itself carries its content (stashed in BarButtonBuilder.CreateButton). Clear here in case this
+        // control instance is reused with different data.
+        Morphic.MorphicBar.Info.BarInfo.SetContent(this, null);
+    }
+
+    // In a VERTICAL bar every item's Width is pinned to the bar's full inner thickness so headers wrap
+    // deterministically (see MorphicBarWindow.AnimateMoveTo). A button left at the style's
+    // HorizontalAlignment=Stretch would then balloon to that full width even for a 3-character label, so in
+    // vertical mode center it at its natural content width instead -- matching how BarMultiButtonControl
+    // centers its natural-width sub-buttons. Horizontal keeps Stretch: there the item is content-sized along
+    // the bar's length axis, so the button fills its group. No-op before the button is built.
+    private void ApplyButtonHorizontalAlignmentForOrientation()
+    {
+        if (_button is not null)
+        {
+            _button.HorizontalAlignment = _orientation == Orientation.Vertical
+                ? HorizontalAlignment.Center
+                : HorizontalAlignment.Stretch;
+        }
     }
 }

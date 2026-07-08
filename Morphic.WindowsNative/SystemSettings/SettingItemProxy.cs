@@ -117,6 +117,7 @@ internal class SettingItemProxy
 
     #region Get SettingType
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface IGetSettingTypeError
     {
         public record ExceptionError(Exception Ex) : IGetSettingTypeError;
@@ -183,6 +184,7 @@ internal class SettingItemProxy
 
     #region Get Value
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface IGetValueError
     {
         public record ExceptionError(Exception Ex) : IGetValueError;
@@ -299,6 +301,7 @@ internal class SettingItemProxy
 
     #region Set Value
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface ISetValueError
     {
         public record ExceptionError(Exception Ex) : ISetValueError;
@@ -464,6 +467,7 @@ internal class SettingItemProxy
     // Errors returned by the WaitFor* helpers: Timeout when the budget expires, ExceptionError
     // when an underlying WinRT call throws. Kept private to SettingItemProxy -- callers translate
 	// these into theirerror union (e.g. IGetValueError, ISetValueError).
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     private interface IWaitForSettingEventError
     {
         public record ExceptionError(Exception Ex) : IWaitForSettingEventError;
@@ -940,6 +944,7 @@ internal class SettingItemProxy
 
     #region Static helpers
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface IGetSettingItemValueError
     {
         public record ExceptionError(Exception Ex) : IGetSettingItemValueError;
@@ -986,6 +991,7 @@ internal class SettingItemProxy
 
     //
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface ISetSettingItemValueError
     {
         public record ExceptionError(Exception Ex) : ISetSettingItemValueError;

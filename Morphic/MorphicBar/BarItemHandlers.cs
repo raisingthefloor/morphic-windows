@@ -96,35 +96,126 @@ internal class BarItemHandlers
         // disappears and Alt+Tab still treats the bar as activated -- a confusing state).
         var focusSnapshot = barManager.CaptureBarFocus();
 
-        // Windows recenters the mouse cursor toward the primary monitor when a display's scaling
-        // changes. Snapshot the cursor now so we can put it back on this display (where the user
-        // clicked the +/- button) after the change settles. A DPI-scale change does not move the
-        // monitor's physical pixel rect, so the original physical position stays valid; the clamp in
-        // the finally is purely a safety net.
+        // Windows recenters the mouse cursor toward a monitor's center when a display's scaling changes.
+        // Snapshot the cursor now: it is the starting anchor for the watcher below, and the fallback
+        // restore point for keyboard activation. A DPI-scale change does not move a monitor's physical
+        // pixel rect, so physical cursor coordinates stay valid across the change.
         var cursorPositionSnapshot = Morphic.WindowsNative.Mouse.Mouse.GetCurrentPosition();
 
-        // If the mouse was OVER THE BAR when +/- was pressed (i.e. the user clicked the button with
-        // the mouse), remember WHERE on the bar it was, as a normalized [0,1] proportion, so we can
-        // keep the cursor over the same button after the bar resizes for the new scale (otherwise a
-        // user zooming several steps loses the button out from under the pointer). If the cursor was
-        // NOT over the bar (e.g. keyboard/space activation), these stay null and the finally just
-        // restores the cursor to its display-relative position.
-        double? cursorBarProportionX = null;
-        double? cursorBarProportionY = null;
-        if (cursorPositionSnapshot.IsSuccess == true
-            && Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)barHwnd, out var barRectangleBeforeResize) == true)
+        // Tracking state shared by the watcher (Stage 1) and the restore (Stage 2). The watcher updates
+        // these as it runs; the finally reads them after the watcher has stopped (the cancel+await there
+        // is the memory barrier, and the watcher is the only writer while it runs):
+        //   - cursorAnchorPoint: where the watcher returns the cursor when Windows recenters it, i.e. the
+        //     user's latest intended position, so a recenter only "flashes".
+        //   - cursorBarNormalized{X,Y}: the user's latest position OVER THE BAR as a [0,1] proportion, so
+        //     the restore can drop the cursor on the same button after the bar resizes/re-docks. Seeded
+        //     from the press point; null if the cursor was never over the bar (e.g. keyboard activation).
+        //   - cursorLeftBar: the user's last move took the cursor off the bar, so the restore leaves it be.
+        System.Drawing.Point cursorAnchorPoint = default;
+        double? cursorBarNormalizedX = null;
+        double? cursorBarNormalizedY = null;
+        bool cursorLeftBar = false;
+        if (cursorPositionSnapshot.IsSuccess == true)
         {
-            var cursorBeforeResize = cursorPositionSnapshot.Value!;
-            var barWidthBeforeResize = barRectangleBeforeResize.right - barRectangleBeforeResize.left;
-            var barHeightBeforeResize = barRectangleBeforeResize.bottom - barRectangleBeforeResize.top;
-            bool cursorWasOverBar = barWidthBeforeResize > 0 && barHeightBeforeResize > 0
-                && cursorBeforeResize.X >= barRectangleBeforeResize.left && cursorBeforeResize.X < barRectangleBeforeResize.right
-                && cursorBeforeResize.Y >= barRectangleBeforeResize.top && cursorBeforeResize.Y < barRectangleBeforeResize.bottom;
-            if (cursorWasOverBar == true)
+            var cursorAtPress = cursorPositionSnapshot.Value!;
+            cursorAnchorPoint = cursorAtPress;
+            if (Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)barHwnd, out var barRectangleAtPress) == true)
             {
-                cursorBarProportionX = (double)(cursorBeforeResize.X - barRectangleBeforeResize.left) / barWidthBeforeResize;
-                cursorBarProportionY = (double)(cursorBeforeResize.Y - barRectangleBeforeResize.top) / barHeightBeforeResize;
+                var barWidthAtPress = barRectangleAtPress.right - barRectangleAtPress.left;
+                var barHeightAtPress = barRectangleAtPress.bottom - barRectangleAtPress.top;
+                bool cursorWasOverBar = barWidthAtPress > 0 && barHeightAtPress > 0
+                    && cursorAtPress.X >= barRectangleAtPress.left && cursorAtPress.X < barRectangleAtPress.right
+                    && cursorAtPress.Y >= barRectangleAtPress.top && cursorAtPress.Y < barRectangleAtPress.bottom;
+                if (cursorWasOverBar == true)
+                {
+                    cursorBarNormalizedX = (double)(cursorAtPress.X - barRectangleAtPress.left) / barWidthAtPress;
+                    cursorBarNormalizedY = (double)(cursorAtPress.Y - barRectangleAtPress.top) / barHeightAtPress;
+                }
             }
+        }
+
+        // Cursor watcher (Stage 1). A short poll loop runs for the whole operation. Windows yanks the
+        // cursor to a monitor's center the instant a display's scaling changes; whenever the watcher
+        // catches the cursor sitting at ANY monitor's center (the OS's doing, not the user's) it moves it
+        // straight back to the anchor, fast enough that the recenter only "flashes". Matching every
+        // monitor's center, not just the primary, guards against a future change to which monitor Windows
+        // recenters toward. Meanwhile the watcher tracks the user's own moves: a move that stays over the
+        // bar updates the normalized anchor (so the restore follows them to whatever button they slid to);
+        // a move off the bar flags hands-off.
+        const int CURSOR_CENTER_TOLERANCE_PIXELS = 4;      // distance from a monitor center that reads as "Windows recentered it"
+        const int CURSOR_SELF_MOVE_TOLERANCE_PIXELS = 2;   // distance from our own last write that reads as "this poll is just our move"
+        var cursorWatchCancellation = new System.Threading.CancellationTokenSource();
+        System.Threading.Tasks.Task? cursorWatchTask = null;
+        if (cursorPositionSnapshot.IsSuccess == true)
+        {
+            var watchToken = cursorWatchCancellation.Token;
+            var watchBarHwnd = (Windows.Win32.Foundation.HWND)barHwnd;
+            cursorWatchTask = System.Threading.Tasks.Task.Run(async () =>
+            {
+                while (watchToken.IsCancellationRequested == false)
+                {
+                    var livePositionResult = Morphic.WindowsNative.Mouse.Mouse.GetCurrentPosition();
+                    if (livePositionResult.IsSuccess == true
+                        && Windows.Win32.PInvoke.GetWindowRect(watchBarHwnd, out var liveBarRectangle) == true)
+                    {
+                        var livePosition = livePositionResult.Value!;
+
+                        // Is the cursor sitting at the center of whatever monitor it is on? That is
+                        // Windows' recenter. GetCurrentPosition and GetDisplayRectangleInPixels are both
+                        // physical pixels, so the comparison is apples to apples.
+                        bool atMonitorCenter = false;
+                        var displayAtCursor = Morphic.WindowsNative.Display.Display.GetDisplayAtPoint(livePosition);
+                        if (displayAtCursor.IsSuccess == true)
+                        {
+                            var displayRectangleResult = displayAtCursor.Value!.GetDisplayRectangleInPixels();
+                            if (displayRectangleResult.IsSuccess == true)
+                            {
+                                var displayRectangle = displayRectangleResult.Value!;
+                                var monitorCenterX = displayRectangle.Left + (displayRectangle.Width / 2);
+                                var monitorCenterY = displayRectangle.Top + (displayRectangle.Height / 2);
+                                atMonitorCenter = System.Math.Abs(livePosition.X - monitorCenterX) <= CURSOR_CENTER_TOLERANCE_PIXELS
+                                    && System.Math.Abs(livePosition.Y - monitorCenterY) <= CURSOR_CENTER_TOLERANCE_PIXELS;
+                            }
+                        }
+
+                        if (atMonitorCenter == true)
+                        {
+                            // Windows recentered it: pull it straight back to the user's latest anchor.
+                            // The next poll reads it back AT the anchor, so it is taken as our own move.
+                            _ = Morphic.WindowsNative.Mouse.Mouse.MoveCursorToPosition(cursorAnchorPoint);
+                        }
+                        else
+                        {
+                            bool isOurOwnMove = System.Math.Abs(livePosition.X - cursorAnchorPoint.X) <= CURSOR_SELF_MOVE_TOLERANCE_PIXELS
+                                && System.Math.Abs(livePosition.Y - cursorAnchorPoint.Y) <= CURSOR_SELF_MOVE_TOLERANCE_PIXELS;
+                            if (isOurOwnMove == false)
+                            {
+                                // The user moved the cursor. Anchor here so any later recenter returns to
+                                // it; if they are still over the bar remember the new normalized spot and
+                                // follow them, otherwise flag that they left the bar.
+                                cursorAnchorPoint = livePosition;
+                                bool overBar = livePosition.X >= liveBarRectangle.left && livePosition.X < liveBarRectangle.right
+                                    && livePosition.Y >= liveBarRectangle.top && livePosition.Y < liveBarRectangle.bottom;
+                                var liveBarWidth = liveBarRectangle.right - liveBarRectangle.left;
+                                var liveBarHeight = liveBarRectangle.bottom - liveBarRectangle.top;
+                                if (overBar == true && liveBarWidth > 0 && liveBarHeight > 0)
+                                {
+                                    cursorBarNormalizedX = (double)(livePosition.X - liveBarRectangle.left) / liveBarWidth;
+                                    cursorBarNormalizedY = (double)(livePosition.Y - liveBarRectangle.top) / liveBarHeight;
+                                    cursorLeftBar = false;
+                                }
+                                else
+                                {
+                                    cursorLeftBar = true;
+                                }
+                            }
+                        }
+                    }
+                    // ~8ms poll: a sub-frame cadence so the recenter is undone before it is perceived.
+                    try { await System.Threading.Tasks.Task.Delay(8, watchToken); }
+                    catch (System.OperationCanceledException) { break; }
+                }
+            });
         }
 
         try
@@ -142,32 +233,42 @@ internal class BarItemHandlers
         }
         finally
         {
+            // Stop the snap-back watcher and await it, so its final write is visible before we decide.
+            cursorWatchCancellation.Cancel();
+            if (cursorWatchTask is not null)
+            {
+                try { await cursorWatchTask; }
+                catch (System.Exception) { }
+            }
+            cursorWatchCancellation.Dispose();
+
             barManager.RestoreBarFocus(focusSnapshot);
 
-            // Put the cursor back (Windows recenters it toward the primary monitor when a display's
-            // scaling changes). Done at the same settle point as focus -- after rasterizationChangeWait,
-            // so the bar has finished resizing and Windows' recenter has already happened.
-            if (cursorBarProportionX is double proportionX && cursorBarProportionY is double proportionY
+            // Stage 2: drop the cursor on the bar's NEW (resized + re-docked) rect at the user's latest
+            // normalized spot -- the button they were last over, mapped onto the new size, so it works for
+            // repeated presses AND for sliding to another button mid-operation. If the user's last move
+            // took the cursor OFF the bar, leave it where they put it (hands off). If there is no bar
+            // anchor (keyboard/space activation, or the press-time rect read failed), just undo any
+            // recenter by restoring the press point on its display.
+            if (cursorLeftBar == false
+                && cursorBarNormalizedX is double normalizedX && cursorBarNormalizedY is double normalizedY
                 && Windows.Win32.PInvoke.GetWindowRect((Windows.Win32.Foundation.HWND)barHwnd, out var barRectangleAfterResize) == true)
             {
-                // Mouse was over the bar: keep it over the SAME normalized point on the bar's NEW
-                // (resized + re-docked) rect, so it stays on the +/- button across repeated presses.
                 // Clamp inside the bar so rounding cannot nudge the cursor just off its edge.
                 var barWidthAfterResize = barRectangleAfterResize.right - barRectangleAfterResize.left;
                 var barHeightAfterResize = barRectangleAfterResize.bottom - barRectangleAfterResize.top;
                 var targetCursorX = System.Math.Clamp(
-                    barRectangleAfterResize.left + (int)System.Math.Round(proportionX * barWidthAfterResize),
+                    barRectangleAfterResize.left + (int)System.Math.Round(normalizedX * barWidthAfterResize),
                     barRectangleAfterResize.left, barRectangleAfterResize.right - 1);
                 var targetCursorY = System.Math.Clamp(
-                    barRectangleAfterResize.top + (int)System.Math.Round(proportionY * barHeightAfterResize),
+                    barRectangleAfterResize.top + (int)System.Math.Round(normalizedY * barHeightAfterResize),
                     barRectangleAfterResize.top, barRectangleAfterResize.bottom - 1);
                 _ = Morphic.WindowsNative.Mouse.Mouse.MoveCursorToPosition(new System.Drawing.Point(targetCursorX, targetCursorY));
             }
-            else if (cursorPositionSnapshot.IsSuccess == true)
+            else if (cursorLeftBar == false && cursorPositionSnapshot.IsSuccess == true)
             {
-                // Mouse was NOT over the bar (keyboard/space activation, or the rect read failed):
-                // restore the cursor to where it was on its display. The display's physical rect does
-                // not move on a DPI-scale change, so the clamp is normally a no-op safety net.
+                // No bar anchor: restore the cursor to where it was on its display. The display's physical
+                // rect does not move on a DPI-scale change, so the clamp is normally a no-op safety net.
                 var restoreCursorPosition = cursorPositionSnapshot.Value!;
                 var displayRectangleResult = display.GetDisplayRectangleInPixels();
                 if (displayRectangleResult.IsSuccess == true)
@@ -179,6 +280,7 @@ internal class BarItemHandlers
                 }
                 _ = Morphic.WindowsNative.Mouse.Mouse.MoveCursorToPosition(restoreCursorPosition);
             }
+            // else: cursorLeftBar == true -- the user moved the cursor off the bar; leave it where it is.
         }
     }
 

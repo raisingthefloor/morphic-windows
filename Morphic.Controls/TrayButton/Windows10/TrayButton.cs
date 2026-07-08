@@ -90,13 +90,13 @@ internal class TrayButton : IDisposable
     ~TrayButton()
     {
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: false);
+        this.Dispose(disposing: false);
     }
 
     public void Dispose()
     {
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
+        this.Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
 
@@ -152,7 +152,7 @@ internal class TrayButton : IDisposable
             {
                 if (_nativeWindow is null)
                 {
-                    CreateNativeWindow();
+                    this.CreateNativeWindow();
                 }
             }
             else //if (_visible == false)
@@ -399,7 +399,7 @@ internal class TrayButton : IDisposable
             //}
 
             // NOTE: due to the weather, news and other taskbar widgets introduced in late versions of Windows 10, we need to re-validate and re-position the taskbar icon when adjacent widgets overlay its position
-            _trayButtonWidgetPositionCheckupTimer = new System.Threading.Timer(TrayButtonWidgetPositionCheckup, null, _widgetPositionCheckupInterval, _widgetPositionCheckupInterval);
+            _trayButtonWidgetPositionCheckupTimer = new System.Threading.Timer(this.TrayButtonWidgetPositionCheckup, null, _widgetPositionCheckupInterval, _widgetPositionCheckupInterval);
         }
 
         // NOTE: this function is somewhat redundant and is provided to support Windows 11; we should refactor all of this code to handle window messages centrally
@@ -678,7 +678,7 @@ internal class TrayButton : IDisposable
                     _trayButtonPositionCheckupTimer = _dispatcherQueue.CreateTimer();
                     _trayButtonPositionCheckupTimer.Interval = new TimeSpan(0, 0, 0, 0, 250);
                     _trayButtonPositionCheckupTimer.IsRepeating = true;
-                    _trayButtonPositionCheckupTimer.Tick += TrayButtonPositionCheckup;
+                    _trayButtonPositionCheckupTimer.Tick += this.TrayButtonPositionCheckup;
                     _trayButtonPositionCheckupTimer.Start();
                     break;
                 case Windows.Win32.PInvoke.WM_ERASEBKGND:
@@ -1183,7 +1183,7 @@ internal class TrayButton : IDisposable
 
         private void PositionTrayButton()
         {
-            var trayButtonRects = CalculateCurrentAndTargetRectOfTrayButton();
+            var trayButtonRects = this.CalculateCurrentAndTargetRectOfTrayButton();
             if (trayButtonRects is null)
             {
                 // fail; abort
@@ -1337,7 +1337,7 @@ internal class TrayButton : IDisposable
                 // if we have tooltip text, update its tracking rectangle
                 if (_tooltipText is not null)
                 {
-                    UpdateTooltipTextAndTracking();
+                    this.UpdateTooltipTextAndTracking();
                 }
             }
         }

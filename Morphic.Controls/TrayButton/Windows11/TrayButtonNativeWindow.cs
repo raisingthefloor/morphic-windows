@@ -183,13 +183,13 @@ internal class TrayButtonNativeWindow : IDisposable
     ~TrayButtonNativeWindow()
     {
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: false);
+        this.Dispose(disposing: false);
     }
 
     public void Dispose()
     {
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
+        this.Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
 
@@ -324,8 +324,13 @@ internal class TrayButtonNativeWindow : IDisposable
             var atomAsString = new Windows.Win32.Foundation.PCWSTR((char*)(nint)s_morphicTrayButtonClassInfoExAtom!.Value);
             fixed (char* pointerToNativeWindowClassName = nativeWindowClassName)
             {
+                // NOTE: WS_EX_TOOLWINDOW keeps this window out of the taskbar and out of the ALT+TAB switcher. Being owned by the
+                //       taskbar (see hWndParent below) would normally have the same effect, but Windows severs the cross-process owner
+                //       link if the taskbar window is destroyed and recreated -- which can happen in-place, without an Explorer restart
+                //       -- and the shell then gives the orphaned (visible, unowned, non-toolwindow) popup a taskbar button. The style 
+                //       bit, unlike the owner link, cannot be severed at runtime, so taskbar exclusion must not rely on ownership alone.
                 handle = Windows.Win32.PInvoke.CreateWindowEx(
-                    dwExStyle: Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_LAYERED/* | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE..WS_EX_TOOLWINDOW*//* | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE..WS_EX_TOPMOST*/,
+                    dwExStyle: Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_LAYERED | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOOLWINDOW/* | Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE.WS_EX_TOPMOST*/,
                     lpClassName: atomAsString,
                     lpWindowName: pointerToNativeWindowClassName,
                     dwStyle: /*Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_CLIPSIBLINGS | */Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_POPUP /*| Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_TABSTOP*/ | Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE.WS_VISIBLE,
@@ -1150,7 +1155,10 @@ internal class TrayButtonNativeWindow : IDisposable
             // NOTE: we might also consider watching for location changes of the task button container, but as we don't use it for position/size calculations at the present time we do not watch accordingly
             var repositionResult = this.RecalculatePositionAndRepositionWindow();
             // NOTE: if we want to handle error cases of RecalculatePositionAndRepositionWindow, we can do so here.
-            Debug.Assert(repositionResult.IsSuccess, "Could not reposition Tray Button window");
+            if (repositionResult.IsError == false)
+            {
+                Debug.WriteLine("[TrayButtonNativeWindow.LocationChangeWindowEventProc(...): Could not reposition Tray Button window");
+            }
         }
     }
 
@@ -1407,6 +1415,7 @@ internal class TrayButtonNativeWindow : IDisposable
         }
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     private interface IGetTaskbarIsTopmostError
     {
         public record CouldNotFindTaskbarRelatedHandle : IGetTaskbarIsTopmostError;
@@ -1452,6 +1461,7 @@ internal class TrayButtonNativeWindow : IDisposable
         return MorphicResult.OkResult(taskbarIsTopmost);
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     private interface IRecalculatePositionAndRepositionWindowError
     {
         public record CouldNotBringToTop(uint Win32ErrorCode) : IRecalculatePositionAndRepositionWindowError;
@@ -1494,7 +1504,7 @@ internal class TrayButtonNativeWindow : IDisposable
             var positionAndResizeBitmapResult = this.PositionAndResizeBitmap(bitmapSize.Value);
             if (positionAndResizeBitmapResult.IsError == true)
             {
-                Debug.Assert(false, "Could not position and resize bitmap.");
+                Debug.WriteLine("[TrayButtonNativeWindow.RecalculatePositionAndRepositionWindow]: could not position and resize bitmap.");
                 var innerError = positionAndResizeBitmapResult.Error!;
                 return MorphicResult.ErrorResult<IRecalculatePositionAndRepositionWindowError>(new IRecalculatePositionAndRepositionWindowError.CouldNotPositionAndResizeBitmap(innerError));
             }
@@ -1542,6 +1552,7 @@ internal class TrayButtonNativeWindow : IDisposable
 
     //
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface ISetBitmapError
     {
         public record CouldNotPositionAndResizeBitmap(IPositionAndResizeBitmapError InnerError) : ISetBitmapError;
@@ -1579,6 +1590,7 @@ internal class TrayButtonNativeWindow : IDisposable
         return MorphicResult.OkResult();
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     internal interface IPositionAndResizeBitmapError
     {
         public record CouldNotGetCurrentPositionAndSize(uint Win32ErrorCode) : IPositionAndResizeBitmapError;
@@ -1808,6 +1820,7 @@ internal class TrayButtonNativeWindow : IDisposable
         };
     }
 
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     internal interface ICalculatePositionAndSizeForTrayButtonError
     {
         public record CouldNotFindTaskbarRelatedHandle : ICalculatePositionAndSizeForTrayButtonError;

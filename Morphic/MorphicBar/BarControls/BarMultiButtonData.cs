@@ -34,6 +34,14 @@ public class BarMultiButtonData : IBarItemData, IDisposable
     // Label displayed above the sub-button group.
     public string Header { get; set; } = "";
 
+    // Contextual help shown by the Info panel on hover (see Morphic.MorphicBar.Info). InfoTitle falls back to
+    // Header when null; InfoSubtitle is a short description. Group-level (the whole group shares one Info surface).
+    // InfoDotsProvider is the group's optional LIVE value indicator (the Size of Text zoom "dots"), invoked at each
+    // hover. Authored as localized .resw strings (and, for the dots, a provider delegate) by the factory.
+    public string? InfoTitle { get; set; }
+    public string? InfoSubtitle { get; set; }
+    internal System.Func<Morphic.MorphicBar.Info.InfoValueDots?>? InfoDotsProvider { get; set; }
+
     // How the sub-buttons are sized across the group.
     public MultiButtonSizingMode SizingMode { get; set; } = MultiButtonSizingMode.StretchToLargest;
 
@@ -51,6 +59,13 @@ public class BarMultiButtonData : IBarItemData, IDisposable
     // If false, sub-buttons follow the bar's orientation (side-by-side in horizontal bars, stacked 
 	// in vertical).
     public bool AlwaysHorizontalSubButtons { get; set; } = false;
+
+    // When set, every sub-button in this group whose own SettingsPage is null inherits this Windows Settings
+    // page for its right-click "Settings" menu item (e.g. the Magnifier group's Show/Hide both open the
+    // Magnifier settings). A sub-button that sets its own SettingsPage overrides this (e.g. the Contrast &
+    // Color group, whose four toggles each open a different page). Internal because the type
+    // (WindowsSettings.Page) is app-internal; only the factory sets it and the context-menu builder reads it.
+    internal Morphic.SystemSettings.WindowsSettings.Page? SettingsPage { get; set; }
 
     protected virtual void Dispose(bool disposing)
     {

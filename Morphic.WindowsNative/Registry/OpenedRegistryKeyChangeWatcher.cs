@@ -101,6 +101,7 @@ internal sealed class OpenedRegistryKeyChangeWatcher : IDisposable
     // ancestor-watching. OtherWin32Error carries through any unexpected status code so the
     // caller can decide how to surface it; this watcher's own callers currently treat any
     // error as "stop watching" but a future caller could distinguish.
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface IArmError
     {
         public record KeyDeleted : IArmError;
@@ -113,6 +114,7 @@ internal sealed class OpenedRegistryKeyChangeWatcher : IDisposable
     // ancestor-watching). NullArgument and KeyDisposed are caller bugs; KeyDeleted and
     // OtherWin32Error are environmental conditions (the key was deleted between open and
     // arm; the handle lacks KEY_NOTIFY access; etc.).
+    // FUTURE: this error result-type interface is slated to become a discriminated union (via the new C# 'union' language feature) once C# 11 or 12 (long-term) ships.
     public interface ICreateError
     {
         public record NullArgument : ICreateError;

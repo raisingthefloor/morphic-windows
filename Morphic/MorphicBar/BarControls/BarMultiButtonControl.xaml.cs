@@ -194,6 +194,11 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             headerWidth = this.HeaderTextBlock.DesiredSize.Width;
             headerHeight = this.HeaderTextBlock.DesiredSize.Height;
         }
+        // Widest single word in the header. In a vertical bar the group reports only its button width (so a
+        // multi-word header WRAPS at spaces rather than widening the bar), but a single word wider than the
+        // buttons would otherwise break MID-CHARACTER. Reporting at least the widest word keeps long words
+        // (common in translated headers, e.g. "Magnificador") whole while still letting multi-word headers wrap.
+        double headerWidestWord = BarHeaderText.WidestWordWidth(this.HeaderTextBlock);
 
         // measure each sub-button and back out the in-effect Margin so we work in natural
         // (margin-free) sizes; the live Margin that would be set by ApplyData for the _current_
@@ -282,7 +287,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         // group's reported WIDTH still needs to follow the vertical-bar-thickness rule.
         double returnedWidth = (orientation == Orientation.Horizontal)
             ? System.Math.Max(subButtonsWidth, headerWidth)
-            : subButtonsWidth;
+            : System.Math.Max(subButtonsWidth, headerWidestWord);
         return new Windows.Foundation.Size(
             returnedWidth,
             headerHeight + subButtonsHeight);
@@ -310,6 +315,7 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
         {
             this.HeaderTextBlock.Text = string.Empty;
             this.HeaderTextBlock.Visibility = Visibility.Collapsed;
+            Morphic.MorphicBar.Info.BarInfo.SetContent(this, null);
             return;
         }
 
@@ -324,6 +330,13 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             this.HeaderTextBlock.Text = _data.Header;
             this.HeaderTextBlock.Visibility = Visibility.Visible;
         }
+
+        // The hover Info panel is shown for the BUTTONS only, NOT the group HEADER: we deliberately do NOT stash
+        // Info content on the group control (a header hover would otherwise resolve to it via the pointer walk-up).
+        // Each sub-button carries its own content (BarButtonBuilder.CreateButton); a DISABLED +/- button additionally
+        // gets a transparent hover catcher in the loop below (a WinUI-disabled button swallows hover). Clear here in
+        // case this control instance is reused with different data.
+        Morphic.MorphicBar.Info.BarInfo.SetContent(this, null);
 
         // validate SizingMode up front (defends against unknown values added in the future).
         // All sub-button column/row definitions are Auto-sized at this stage. Uniform-width
@@ -386,6 +399,11 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
                 default:
                     throw new ArgumentException("LayoutStyle must be 'TextOnly' for horizontal multi-button controls");
             }
+
+            // A sub-button without its own SettingsPage inherits the group's (e.g. Magnifier Show/Hide both
+            // open the Magnifier settings); a sub-button that sets its own keeps it (the Contrast & Color
+            // toggles each open a different page). Resolved here so CreateButton's context-menu wiring sees it.
+            buttonData.SettingsPage ??= _data.SettingsPage;
 
             var button = BarButtonBuilder.CreateButton(buttonData, plainStyle, toggleStyle);
 
@@ -474,6 +492,54 @@ public sealed partial class BarMultiButtonControl : UserControl, IBarItemControl
             this.ButtonsContainer.Children.Add(button);
 
             _subButtons.Add(button);
+
+            // Disabled-hover catcher: a WinUI-disabled button swallows pointer input, so hovering it would show no
+            // Info panel. When this sub-button carries a DisabledInfoSubtitle (the Text Size +/- "can't go further"
+            // limit), overlay a transparent, hit-testable Border in the SAME cell carrying that limit Info. It is
+            // hit-testable ONLY while the button is disabled -- so it never blocks the live button's clicks -- and
+            // the disabled button underneath keeps its grayed look. (Only Text Size uses this; that group is
+            // AlwaysHorizontal, so ReorientButtonsContainer never moves its cells and the overlay stays aligned.)
+            if (string.IsNullOrWhiteSpace(buttonData.DisabledInfoSubtitle) == false)
+            {
+                var overlay = new Border
+                {
+                    Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent),
+                    Margin = button.Margin,
+                    IsHitTestVisible = (buttonData.IsEnabled == false),
+                };
+                var overlayTitle = string.IsNullOrEmpty(buttonData.InfoTitle)
+                    ? (string.IsNullOrEmpty(_data.Header) ? buttonData.Text : _data.Header!)
+                    : buttonData.InfoTitle!;
+                Morphic.MorphicBar.Info.BarInfo.SetContent(overlay,
+                    new Morphic.MorphicBar.Info.BarInfoContent(overlayTitle, buttonData.DisabledInfoSubtitle, buttonData.InfoDotsProvider));
+
+                if (effectiveSubButtonOrientation == Orientation.Horizontal)
+                {
+                    Grid.SetColumn(overlay, i);
+                }
+                else
+                {
+                    Grid.SetRow(overlay, i);
+                }
+                this.ButtonsContainer.Children.Add(overlay);   // added AFTER the button -> renders on top of it
+
+                // Flip the catcher's hit-testing with the button's enabled state (a Text Size zoom to/from the limit
+                // toggles IsEnabled live). Data is the source of truth, same as the button's own IsEnabled mirror.
+                var capturedOverlay = overlay;
+                var capturedButtonData = buttonData;
+                System.ComponentModel.PropertyChangedEventHandler overlayEnabledHandler = (_, args) =>
+                {
+                    if (args.PropertyName == nameof(BarButtonData.IsEnabled))
+                    {
+                        _ = capturedOverlay.DispatcherQueue.TryEnqueue(() =>
+                        {
+                            capturedOverlay.IsHitTestVisible = (capturedButtonData.IsEnabled == false);
+                        });
+                    }
+                };
+                capturedButtonData.PropertyChanged += overlayEnabledHandler;
+                overlay.Unloaded += (_, _) => capturedButtonData.PropertyChanged -= overlayEnabledHandler;
+            }
         }
 
         this.ApplyCornerRadii(effectiveSubButtonOrientation);

@@ -1,0 +1,21 @@
+<Project>
+
+  <!-- ================================================================================================
+       Windows 10 support toggle  (SINGLE SOURCE OF TRUTH for every project in this solution)
+
+       Morphic builds either for Windows 11+ only, or for Windows 10 (22H2+) AND Windows 11. The
+       Windows 10 code paths are guarded by the INCLUDE_WINDOWS_10_SUPPORT compile constant so they compile 
+       OUT of a Windows 11+ only build.
+
+       To OMIT Windows 10 support (Windows 11+ only), set IncludeWindows10Support to false below.
+
+       NOTE: the constant itself is appended in Directory.Build.targets, NOT here. The .csproj files
+       OVERWRITE DefineConstants in their bodies, and a .props file is imported BEFORE the project body 
+       (so it would be clobbered); a .targets file is imported AFTER it (so the append survives). This 
+       file only holds the toggle.
+       ================================================================================================ -->
+  <PropertyGroup>
+    <IncludeWindows10Support>true</IncludeWindows10Support>
+  </PropertyGroup>
+
+</Project>

@@ -62,7 +62,8 @@
                         Click="MorphicMenuButton_Click"
                         RightTapped="MorphicMenuButton_RightTapped"
                         AutomationProperties.Name="Morphic Menu">
-                    <controls:MorphicMenuLogoViewbox Width="{x:Bind local:MorphicBarWindowMetrics.MenuLogoWidth}" Height="{x:Bind local:MorphicBarWindowMetrics.MenuLogoHeight}"/>
+                    <!-- The Morphic logo is a logo and must NOT be horizontally mirrored in RTL; pin it LeftToRight so the bar's RTL FlowDirection does not flip it. -->
+                    <controls:MorphicMenuLogoViewbox FlowDirection="LeftToRight" Width="{x:Bind local:MorphicBarWindowMetrics.MenuLogoWidth}" Height="{x:Bind local:MorphicBarWindowMetrics.MenuLogoHeight}"/>
                 </Button>
 
                 <!-- Close button (top-right corner by default (LTR flow direction); top-left corner when RTL flow direction) -->

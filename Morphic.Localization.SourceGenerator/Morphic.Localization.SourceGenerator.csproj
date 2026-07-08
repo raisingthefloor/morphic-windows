@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Roslyn incremental source generator that emits Morphic.Localization.Strings (one strongly typed
+       property per key in Strings\en-US\Resources.resw). Build-time only: it is referenced by
+       Morphic.csproj as an Analyzer and is never shipped. Source generators MUST target netstandard2.0
+       so the compiler can load them. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- Not a runtime library: do not emit into the consumer's output, and don't pack/ship it. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Pinned to a Roslyn version <= the one in the .NET SDK's compiler (generators are forward-
+         compatible onto newer Roslyn, not backward). PrivateAssets=all so it never flows to consumers. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>
