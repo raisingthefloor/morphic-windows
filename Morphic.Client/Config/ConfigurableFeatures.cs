@@ -48,6 +48,8 @@
         //
         public static bool CustomMorphicBarsIsEnabled = true;
         //
+        public static bool OsSettingsLinksIsEnabled = true;
+        //
         public static bool ResetSettingsIsEnabled = false;
         //
         public static bool SignInIsEnabled = true;
@@ -69,6 +71,7 @@
             bool checkForUpdatesIsEnabled,
             bool cloudSettingsTransferIsEnabled,
             bool customMorphicBarsIsEnabled,
+            bool osSettingsLinksIsEnabled,
             bool resetSettingsIsEnabled,
             bool signInIsEnabled,
             bool telemetryIsEnabled,
@@ -92,6 +95,7 @@
             ConfigurableFeatures.CheckForUpdatesIsEnabled = checkForUpdatesIsEnabled;
             ConfigurableFeatures.CloudSettingsTransferIsEnabled = cloudSettingsTransferIsEnabled;
             ConfigurableFeatures.CustomMorphicBarsIsEnabled = customMorphicBarsIsEnabled;
+            ConfigurableFeatures.OsSettingsLinksIsEnabled = osSettingsLinksIsEnabled;
             ConfigurableFeatures.ResetSettingsIsEnabled = resetSettingsIsEnabled;
             ConfigurableFeatures.SignInIsEnabled = signInIsEnabled;
             ConfigurableFeatures.TelemetryIsEnabled = telemetryIsEnabled;

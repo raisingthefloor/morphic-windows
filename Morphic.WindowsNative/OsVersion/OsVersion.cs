@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -39,7 +39,7 @@ public enum WindowsVersion
     Win11_vFuture // any future release of Windows 11 we're not yet aware of
 }
 
-public struct OsVersion
+public class OsVersion
 {
     private const int WIN10_22H2_BUILD = 19045;
     private const int EARLIEST_KNOWN_WIN10_BUILD = 10240 /* WIN10_1507_BUILD */;
@@ -172,7 +172,9 @@ public struct OsVersion
         }
     }
 
-    public static bool IsEqualOrNewerThanVersion(WindowsVersion version, int? revision = null)
+    //
+
+    public static MorphicResult<bool, MorphicUnit> IsEqualOrNewerThanVersion(WindowsVersion version, int? revision = null)
     {
         var versionBuild = OsVersion.GetBuildVersionForOsVersion(version);
         if (versionBuild is null)
@@ -190,20 +192,21 @@ public struct OsVersion
                 if (getUpdateBuildRevisionResult.IsError == true)
                 {
                     Debug.Assert(false, "Could not retrieve current OS revision");
-                    return false;
+                    return MorphicResult.ErrorResult();
                 }
                 var currentVersionRevision = getUpdateBuildRevisionResult.Value!;
 
-                return (currentVersionRevision >= revision!.Value);
+                return MorphicResult.OkResult(currentVersionRevision >= revision!.Value);
             }
             else
             {
-                return true;
+                // no revision specified; current build is >= build of `version`
+                return MorphicResult.OkResult(true);
             }
         }
         else /* if (currentVersionBuild <= versionBuild) */
         {
-            return false;
+            return MorphicResult.OkResult(false);
         }
     }
 
@@ -243,19 +246,34 @@ public struct OsVersion
 
     public static MorphicResult<uint, MorphicUnit> GetUpdateBuildRevision()
     {
-        var openRegistryKeyResult = Morphic.WindowsNative.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
-        if (openRegistryKeyResult.IsError == true)
+        Microsoft.Win32.RegistryKey? registryKey;
+        try
+        {
+            registryKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion", writable: false);
+        }
+        catch
         {
             return MorphicResult.ErrorResult();
         }
-        var registryKey = openRegistryKeyResult.Value!;
+        if (registryKey is null)
+        {
+            return MorphicResult.ErrorResult();
+        }
 
-        var getValueResult = registryKey.GetValueData<uint>("UBR");
-        if (getValueResult.IsError == true)
+        var ubrAsNullableObject = registryKey.GetValue("UBR");
+        uint updateBuildRevision;
+        if (ubrAsNullableObject is null)
         {
             return MorphicResult.ErrorResult();
         }
-        var updateBuildRevision = getValueResult.Value!;
+        else if (ubrAsNullableObject is uint ubrAsUint)
+        {
+            updateBuildRevision = ubrAsUint;
+        }
+        else
+        {
+            return MorphicResult.ErrorResult();
+        }
 
         return MorphicResult.OkResult(updateBuildRevision);
     }

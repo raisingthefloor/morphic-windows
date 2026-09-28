@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Windows.Controls;
+    using Config;
     using MainMenu;
 
     public class BarContextMenu
@@ -17,6 +18,12 @@
 
             foreach ((string? name, string? target) in items)
             {
+                // if the links to the Windows Settings app are disabled by configuration, leave out the settings entries
+                if ((name == "settings" || name == "setting") && ConfigurableFeatures.OsSettingsLinksIsEnabled == false)
+                {
+                    continue;
+                }
+
                 string? format, finalName;
                 MorphicMenuItem.MorphicMenuItemTelemetryType? telemetryType;
                 switch (name)

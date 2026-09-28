@@ -62,6 +62,12 @@ public partial class MorphicMainMenu : ContextMenu
             this.ChangeMorphicBarSeparator.Visibility = Visibility.Collapsed;
         }
 
+        // if ConfigurableFeatures.OsSettingsLinksIsEnabled is false, then hide the submenu which links to the Windows Settings app
+        if (ConfigurableFeatures.OsSettingsLinksIsEnabled == false)
+        {
+            this.MoreSettingsMenuItem.Visibility = Visibility.Collapsed;
+        }
+
         base.OnInitialized(e);
     }
 

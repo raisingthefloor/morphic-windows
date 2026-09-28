@@ -50,7 +50,7 @@
 
     <Separator/>
 
-    <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_MoreSettingsToMakeComputerEasier}">
+    <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_MoreSettingsToMakeComputerEasier}" x:Name="MoreSettingsMenuItem">
 
         <menu:MorphicMenuHeader Header="{DynamicResource MainMenuItem_Setting_OsSettingsSection}"/>
         <menu:MorphicMenuItem Header="{DynamicResource MainMenuItem_Setting_OsMagnifierSettings}" Open="ms-settings:easeofaccess-magnifier" />

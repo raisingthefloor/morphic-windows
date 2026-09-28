@@ -232,6 +232,9 @@
     <system:String x:Key="MorphicBarButtonContextMenuItem_Demo">Quick _Demo video</system:String>
     <system:String x:Key="MorphicBarButtonContextMenuItem_LearnMore">_Learn more</system:String>
     <system:String x:Key="MorphicBarButtonContextMenuItem_Settings">_Settings</system:String>
+
+    <system:String x:Key="OpenMenuItemFailedDialog_LinkMessage">Morphic could not open this link on this computer. It may have been disabled by your organization.</system:String>
+    <system:String x:Key="OpenMenuItemFailedDialog_WindowsSettingsMessage">Morphic could not open Windows Settings on this computer. It may have been disabled by your organization.</system:String>
     
     <system:String x:Key="RestoreDialog_BackupDate">Backup Date</system:String>
     <system:String x:Key="RestoreDialog_ClickingBelowWillRestoreSettings_Part1">Clicking</system:String>

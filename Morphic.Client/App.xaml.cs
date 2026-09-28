@@ -195,6 +195,7 @@ public partial class App : Application
             public EnabledFeature? checkForUpdates { get; set; }
             public EnabledFeature? cloudSettingsTransfer { get; set; }
             public EnabledFeature? customMorphicBars { get; set; }
+            public EnabledFeature? osSettingsLinks { get; set; }
             public EnabledFeature? resetSettings { get; set; }
             public EnabledFeature? signIn { get; set; }
         }
@@ -222,6 +223,7 @@ public partial class App : Application
         public bool CheckForUpdatesIsEnabled;
         public bool CloudSettingsTransferIsEnabled;
         public bool CustomMorphicBarsIsEnabled;
+        public bool OsSettingsLinksIsEnabled;
         public bool ResetSettingsIsEnabled;
         public bool SignInIsEnabled;
         public ConfigurableFeatures.MorphicBarDefaultLocationOption MorphicBarDefaultLocation;
@@ -254,6 +256,9 @@ public partial class App : Application
         //
         // custom Morphic bars
         result.CustomMorphicBarsIsEnabled = true;
+        //
+        // links to the operating system's settings (e.g. the Windows Settings app)
+        result.OsSettingsLinksIsEnabled = true;
         //
         // reset settings (to standard)
         result.ResetSettingsIsEnabled = false;
@@ -415,6 +420,12 @@ public partial class App : Application
         if (deserializedJson.features?.customMorphicBars?.enabled is not null)
         {
             result.CustomMorphicBarsIsEnabled = deserializedJson.features.customMorphicBars.enabled.Value;
+        }
+
+        // capture the OS settings links "is enabled" setting
+        if (deserializedJson.features?.osSettingsLinks?.enabled is not null)
+        {
+            result.OsSettingsLinksIsEnabled = deserializedJson.features.osSettingsLinks.enabled.Value;
         }
 
         // capture the reset settings (to standard) "is enabled" setting
@@ -980,6 +991,7 @@ public partial class App : Application
             checkForUpdatesIsEnabled: commonConfiguration.CheckForUpdatesIsEnabled,
             cloudSettingsTransferIsEnabled: commonConfiguration.CloudSettingsTransferIsEnabled,
             customMorphicBarsIsEnabled: commonConfiguration.CustomMorphicBarsIsEnabled,
+            osSettingsLinksIsEnabled: commonConfiguration.OsSettingsLinksIsEnabled,
             resetSettingsIsEnabled: commonConfiguration.ResetSettingsIsEnabled,
             signInIsEnabled: commonConfiguration.SignInIsEnabled,
             telemetryIsEnabled: telemetryIsEnabled,

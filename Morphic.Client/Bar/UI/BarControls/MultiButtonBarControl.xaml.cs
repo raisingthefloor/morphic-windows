@@ -12,6 +12,7 @@ namespace Morphic.Client.Bar.UI.BarControls
 {
     using Data;
     using Data.Actions;
+    using Morphic.Core;
     using Settings.SettingsHandlers;
     using System;
     using System.Collections.Generic;
@@ -335,37 +336,48 @@ namespace Morphic.Client.Bar.UI.BarControls
                                 // error
                                 //break;
                             }
-                            else if (Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v23H2, 4037 /* not required in build 22631.3447, but required in build 22631.4037 */) == true)
-                            {
-                                // Windows 11 v23H2 revision 4037+, Windows 11 v24H2+
-
-                                // capture changes to system dark theme (triggering our this.InverseSettingOnChanged event handler)
-                                Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.SystemTheme);
-                                systemThemeSetting.Changed += this.SystemThemeChanged;
-                                //
-                                this.Control.Unloaded += (sender, args) => systemThemeSetting.Changed -= this.SystemThemeChanged;
-
-                                // capture changes to apps dark theme (triggering our this.InverseSettingOnChanged event handler)
-                                Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeApps);
-                                appsThemeSetting.Changed += this.InverseSettingOnChanged;
-                                //
-                                this.Control.Unloaded += (sender, args) => appsThemeSetting.Changed -= this.InverseSettingOnChanged;
-                            }
                             else
                             {
-                                // Windows 10 v1903+
+                                var isEqualOrNewerThanVersionResult = Morphic.WindowsNative.OsVersion.OsVersion.IsEqualOrNewerThanVersion(WindowsNative.OsVersion.WindowsVersion.Win11_v23H2, 4037 /* not required in build 22631.3447, but required in build 22631.4037 */);
+                                if (isEqualOrNewerThanVersionResult.IsError == true)
+                                {
+                                    Debug.Assert(false, "Could not determine Windows version: cannot retrieve dark mode state");
+                                    break;
+                                }
+                                var isEqualOrNewerThanVersion = isEqualOrNewerThanVersionResult.Value!;
 
-                                // capture changes to system dark theme (triggering our this.InverseSettingOnChanged event handler)
-                                Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeSystem);
-                                systemThemeSetting.Changed += this.InverseSettingOnChanged;
-                                //
-                                this.Control.Unloaded += (sender, args) => systemThemeSetting.Changed -= this.InverseSettingOnChanged;
-                                
-                                // capture changes to apps dark theme (triggering our this.InverseSettingOnChanged event handler)
-                                Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeApps);
-                                appsThemeSetting.Changed += this.InverseSettingOnChanged;
-                                //
-                                this.Control.Unloaded += (sender, args) => appsThemeSetting.Changed -= this.InverseSettingOnChanged;
+                                if (isEqualOrNewerThanVersion == true)
+                                {
+                                    // Windows 11 v23H2 revision 4037+, Windows 11 v24H2+
+
+                                    // capture changes to system dark theme (triggering our this.InverseSettingOnChanged event handler)
+                                    Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.SystemTheme);
+                                    systemThemeSetting.Changed += this.SystemThemeChanged;
+                                    //
+                                    this.Control.Unloaded += (sender, args) => systemThemeSetting.Changed -= this.SystemThemeChanged;
+
+                                    // capture changes to apps dark theme (triggering our this.InverseSettingOnChanged event handler)
+                                    Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeApps);
+                                    appsThemeSetting.Changed += this.InverseSettingOnChanged;
+                                    //
+                                    this.Control.Unloaded += (sender, args) => appsThemeSetting.Changed -= this.InverseSettingOnChanged;
+                                }
+                                else
+                                {
+                                    // Windows 10 v1903+
+
+                                    // capture changes to system dark theme (triggering our this.InverseSettingOnChanged event handler)
+                                    Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeSystem);
+                                    systemThemeSetting.Changed += this.InverseSettingOnChanged;
+                                    //
+                                    this.Control.Unloaded += (sender, args) => systemThemeSetting.Changed -= this.InverseSettingOnChanged;
+
+                                    // capture changes to apps dark theme (triggering our this.InverseSettingOnChanged event handler)
+                                    Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(Settings.SolutionsRegistry.SettingId.LightThemeApps);
+                                    appsThemeSetting.Changed += this.InverseSettingOnChanged;
+                                    //
+                                    this.Control.Unloaded += (sender, args) => appsThemeSetting.Changed -= this.InverseSettingOnChanged;
+                                }
                             }
 
                             ((ToggleButton)this.Control).IsChecked = darkModeState;

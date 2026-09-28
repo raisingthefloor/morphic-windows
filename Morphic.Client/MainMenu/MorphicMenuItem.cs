@@ -1,8 +1,10 @@
 ﻿namespace Morphic.Client.MainMenu;
 
 using Config;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
@@ -39,10 +41,56 @@ public class MorphicMenuItem : MenuItem
 
     internal static void OpenMenuItemPath(string openPath)
     {
-        Process.Start(new ProcessStartInfo(openPath)
+        try
         {
-            UseShellExecute = true
-        });
+            Process.Start(new ProcessStartInfo(openPath)
+            {
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            // NOTE: the shell can refuse to start the target (for example, when an organization's policy prohibits the Windows Settings app); log the failure and tell the user instead of letting the exception end the application
+            var errorDescription = ex.Message;
+            if (ex is Win32Exception win32Exception)
+            {
+                errorDescription += " (native error code: " + win32Exception.NativeErrorCode.ToString() + " / 0x" + win32Exception.NativeErrorCode.ToString("X8") + ")";
+            }
+            App.Current.Logger?.LogError("Could not open menu item path {path}; error: {error}", openPath, errorDescription);
+
+            string messageResourceTag;
+            if (openPath.StartsWith("ms-settings:", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                messageResourceTag = "{{OpenMenuItemFailedDialog_WindowsSettingsMessage}}";
+            }
+            else
+            {
+                messageResourceTag = "{{OpenMenuItemFailedDialog_LinkMessage}}";
+            }
+            var message = App.Current.LocalizeTemplatedString(messageResourceTag) ?? messageResourceTag;
+            // NOTE: WPF's MessageBox has no topmost option, so we own it with a hidden topmost window (as an owned window inherits its owner's topmost state); this keeps the message box in front of the (topmost) MorphicBar while it stays in our process and message loop
+            // NOTE: the DefaultDesktopOnly and ServiceNotification options are not an alternative option: they hand the message box to the system (which would block our message loop and let the box outlive the application)
+            var messageBoxOwner = new Window()
+            {
+                WindowStyle = WindowStyle.None,
+                ResizeMode = ResizeMode.NoResize,
+                ShowInTaskbar = false,
+                ShowActivated = false,
+                Topmost = true,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                Width = 0,
+                Height = 0
+            };
+            try
+            {
+                messageBoxOwner.Show();
+                MessageBox.Show(messageBoxOwner, message, "Morphic", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            finally
+            {
+                messageBoxOwner.Close();
+            }
+        }
     }
 
     internal static async Task RecordMenuItemTelemetryAsync(string? openPath, MorphicMenuItem.MenuType parentMenuType, MorphicMenuItemTelemetryType? telemetryType, string? telemetryCategory)
