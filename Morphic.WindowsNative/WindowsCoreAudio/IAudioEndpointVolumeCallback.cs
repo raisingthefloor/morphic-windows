@@ -31,6 +31,6 @@ namespace Morphic.WindowsNative.WindowsCoreAudio;
 [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IAudioEndpointVolumeCallback
 {
-   // OnNotify
-   public void OnNotify(IntPtr pNotify /* PAUDIO_VOLUME_NOTIFICATION_DATA */);
+    // OnNotify
+    public void OnNotify(IntPtr pNotify /* PAUDIO_VOLUME_NOTIFICATION_DATA */);
 }

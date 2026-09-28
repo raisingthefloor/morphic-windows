@@ -31,76 +31,76 @@ namespace Morphic.WindowsNative.WindowsCoreAudio;
 
 internal class MMDeviceEnumerator
 {
-   private const String CLSID_MMDeviceEnumerator = "BCDE0395-E52F-467C-8E3D-C4579291692E";
+    private const String CLSID_MMDeviceEnumerator = "BCDE0395-E52F-467C-8E3D-C4579291692E";
 
-   private IMMDeviceEnumerator _mmDeviceEnumerator;
+    private IMMDeviceEnumerator _mmDeviceEnumerator;
 
-   // NOTE: this constructor throws COMException if the underlying COM object cannot be initialized
-   private MMDeviceEnumerator(IMMDeviceEnumerator mmDeviceEnumerator)
-   {
-       _mmDeviceEnumerator = mmDeviceEnumerator;
-   }
+    // NOTE: this constructor throws COMException if the underlying COM object cannot be initialized
+    private MMDeviceEnumerator(IMMDeviceEnumerator mmDeviceEnumerator)
+    {
+        _mmDeviceEnumerator = mmDeviceEnumerator;
+    }
 
-   public static MorphicResult<MMDeviceEnumerator, WindowsComError> CreateNew()
-   {
-       // get a Type reference for MMDeviceEnumerator
-       Type MMDeviceEnumeratorType;
-       try
-       {
-           MMDeviceEnumeratorType = Type.GetTypeFromCLSID(new Guid(CLSID_MMDeviceEnumerator), true)!;
-       }
-       catch
-       {
-           // TODO: consider providing a more specific exception result
-           return MorphicResult.ErrorResult(WindowsComError.ComException(new COMException()));
-       }
+    public static MorphicResult<MMDeviceEnumerator, WindowsComError> CreateNew()
+    {
+        // get a Type reference for MMDeviceEnumerator
+        Type MMDeviceEnumeratorType;
+        try
+        {
+            MMDeviceEnumeratorType = Type.GetTypeFromCLSID(new Guid(CLSID_MMDeviceEnumerator), true)!;
+        }
+        catch
+        {
+            // TODO: consider providing a more specific exception result
+            return MorphicResult.ErrorResult(WindowsComError.ComException(new COMException()));
+        }
 
-       MMDeviceEnumerator result;
-       try
-       {
-           // NOTE: objects created by Activator.CreateInstance do not need to be manually freed
-           var mmDeviceEnumeratorAsNullable = Activator.CreateInstance(MMDeviceEnumeratorType) as IMMDeviceEnumerator;
-           if (mmDeviceEnumeratorAsNullable is null)
-           {
-               throw new COMException();
-           }
-           result = new MMDeviceEnumerator(mmDeviceEnumeratorAsNullable!);
-       }
-       catch
-       {
-           // TODO: in the future, consider throwing different exceptions for different failure conditions
-           throw new COMException();
-       }
+        MMDeviceEnumerator result;
+        try
+        {
+            // NOTE: objects created by Activator.CreateInstance do not need to be manually freed
+            var mmDeviceEnumeratorAsNullable = Activator.CreateInstance(MMDeviceEnumeratorType) as IMMDeviceEnumerator;
+            if (mmDeviceEnumeratorAsNullable is null)
+            {
+                throw new COMException();
+            }
+            result = new MMDeviceEnumerator(mmDeviceEnumeratorAsNullable!);
+        }
+        catch
+        {
+            // TODO: in the future, consider throwing different exceptions for different failure conditions
+            throw new COMException();
+        }
 
-       return MorphicResult.OkResult(result);
-   }
+        return MorphicResult.OkResult(result);
+    }
 
-   public MorphicResult<MMDevice, WindowsComError> GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role)
-   {
-       IMMDevice? immDevice;
-       var result = _mmDeviceEnumerator.GetDefaultAudioEndpoint(dataFlow, role, out immDevice);
-       if (result != ExtendedPInvoke.S_OK)
-       {
-           if (result == ExtendedPInvoke.E_NOTFOUND)
-           {
-               throw new NoDeviceIsAvailableException();
-           }
-           else
-           {
-               // TODO: consider throwing more granular exceptions here
-               var comException = new COMException("IMMDeviceEnumerator.GetDefaultAudioEndpoint failed", Marshal.GetExceptionForHR(result));
-               return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
-           }
-       }
+    public MorphicResult<MMDevice, WindowsComError> GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role)
+    {
+        IMMDevice? immDevice;
+        var result = _mmDeviceEnumerator.GetDefaultAudioEndpoint(dataFlow, role, out immDevice);
+        if (result != ExtendedPInvoke.S_OK)
+        {
+            if (result == ExtendedPInvoke.E_NOTFOUND)
+            {
+                throw new NoDeviceIsAvailableException();
+            }
+            else
+            {
+                // TODO: consider throwing more granular exceptions here
+                var comException = new COMException("IMMDeviceEnumerator.GetDefaultAudioEndpoint failed", Marshal.GetExceptionForHR(result));
+                return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
+            }
+        }
 
-       if (immDevice is null)
-       {
-           // NOTE: this code should never be executed since GetDefaultAudioEndpoint should have returned an HRESULT of E_POINTER if it failed
-           var comException = new COMException("IMMDeviceEnumerator.GetDefaultAudioEndpoint returned a null pointer", new NullReferenceException());
-           return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
-       }
+        if (immDevice is null)
+        {
+            // NOTE: this code should never be executed since GetDefaultAudioEndpoint should have returned an HRESULT of E_POINTER if it failed
+            var comException = new COMException("IMMDeviceEnumerator.GetDefaultAudioEndpoint returned a null pointer", new NullReferenceException());
+            return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
+        }
 
-       var mmDevice = MMDevice.CreateFromIMMDevice(immDevice!);
-       return MorphicResult.OkResult(mmDevice);
-   }
+        var mmDevice = MMDevice.CreateFromIMMDevice(immDevice!);
+        return MorphicResult.OkResult(mmDevice);
+    }
 }

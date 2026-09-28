@@ -28,8 +28,8 @@ namespace Morphic.WindowsNative.WindowsCoreAudio;
 // https://docs.microsoft.com/en-us/windows/win32/api/mmdeviceapi/ne-mmdeviceapi-erole
 internal enum ERole : int
 {
-   eConsole = 0,
-   eMultimedia = eConsole + 1,
-   eCommunications = eMultimedia + 1 /*,
-   ERole_enum_count = eCommunications + 1 */
+    eConsole = 0,
+    eMultimedia = eConsole + 1,
+    eCommunications = eMultimedia + 1 /*,
+    ERole_enum_count = eCommunications + 1 */
 }

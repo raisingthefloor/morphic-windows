@@ -31,17 +31,17 @@ namespace Morphic.WindowsNative.WindowsCoreAudio;
 [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IMMDeviceEnumerator
 {
-   // EnumAudioEndpoints
-   // NOTE: EnumAudioEndpoints is a filler declaration (required for COM); change IntPtr to IMMDeviceCollection? if we use this function in the future
-   public Int32 EnumAudioEndpoints(EDataFlow dataFlow, UInt32 stateMask, out IntPtr devices);
+    // EnumAudioEndpoints
+    // NOTE: EnumAudioEndpoints is a filler declaration (required for COM); change IntPtr to IMMDeviceCollection? if we use this function in the future
+    public Int32 EnumAudioEndpoints(EDataFlow dataFlow, UInt32 stateMask, out IntPtr devices);
 
-   // GetDefaultAudioEndpoint
-   public Int32 GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role, [MarshalAs(UnmanagedType.Interface)] out IMMDevice? endpoint);
+    // GetDefaultAudioEndpoint
+    public Int32 GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role, [MarshalAs(UnmanagedType.Interface)] out IMMDevice? endpoint);
 
-   // GetDevice
+    // GetDevice
 
-   // RegisterEndpointNotificationCallback
+    // RegisterEndpointNotificationCallback
 
-   // UnregisterEndpointNotificationCallback
+    // UnregisterEndpointNotificationCallback
 
 }

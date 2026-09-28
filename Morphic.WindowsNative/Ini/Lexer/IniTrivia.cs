@@ -31,16 +31,16 @@ namespace Morphic.WindowsNative.Ini.Lexer;
 
 internal record IniTrivia
 {
-   public IniTriviaKind Kind;
-   public List<char> Lexeme;
+    public IniTriviaKind Kind;
+    public List<char> Lexeme;
 
-   public IniExplicitLineTerminatorOption LineTerminator;
+    public IniExplicitLineTerminatorOption LineTerminator;
 
-   public IniTrivia(IniTriviaKind kind, List<char> lexeme, IniExplicitLineTerminatorOption lineTerminator)
-   {
-       this.Kind = kind;
-       this.Lexeme = lexeme;
+    public IniTrivia(IniTriviaKind kind, List<char> lexeme, IniExplicitLineTerminatorOption lineTerminator)
+    {
+        this.Kind = kind;
+        this.Lexeme = lexeme;
 
-       this.LineTerminator = lineTerminator;
-   }
+        this.LineTerminator = lineTerminator;
+    }
 }

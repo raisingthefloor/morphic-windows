@@ -31,23 +31,23 @@ namespace Morphic.WindowsNative.Ini.Lexer;
 
 internal record IniToken
 {
-   public IniTokenKind Kind;
-   public List<char> Lexeme;
+    public IniTokenKind Kind;
+    public List<char> Lexeme;
 
-   public IniExplicitLineTerminatorOption LineTerminator;
-   
-   public List<IniTrivia> LeadingTrivia;
-   public List<IniTrivia> TrailingTrivia;
+    public IniExplicitLineTerminatorOption LineTerminator;
 
-   // NOTE: for convenience, we allow callers to pass in a null list for leading/trailing trivia, but we always translate nulls to empty lists
-	public IniToken(IniTokenKind kind, List<char> lexeme, IniExplicitLineTerminatorOption lineTerminator, List<IniTrivia>? leadingTrivia, List<IniTrivia>? trailingTrivia)
-   {
-       this.Kind = kind;
-       this.Lexeme = lexeme;
+    public List<IniTrivia> LeadingTrivia;
+    public List<IniTrivia> TrailingTrivia;
 
-       this.LineTerminator = lineTerminator;
+    // NOTE: for convenience, we allow callers to pass in a null list for leading/trailing trivia, but we always translate nulls to empty lists
+    public IniToken(IniTokenKind kind, List<char> lexeme, IniExplicitLineTerminatorOption lineTerminator, List<IniTrivia>? leadingTrivia, List<IniTrivia>? trailingTrivia)
+    {
+        this.Kind = kind;
+        this.Lexeme = lexeme;
 
-       this.LeadingTrivia = leadingTrivia ?? new List<IniTrivia>();
-       this.TrailingTrivia = trailingTrivia ?? new List<IniTrivia>();
-   }
+        this.LineTerminator = lineTerminator;
+
+        this.LeadingTrivia = leadingTrivia ?? new List<IniTrivia>();
+        this.TrailingTrivia = trailingTrivia ?? new List<IniTrivia>();
+    }
 }

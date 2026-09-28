@@ -31,72 +31,72 @@ namespace Morphic.WindowsNative.Ini;
 
 public class IniProperty
 {
-   public string Key;
-   public string Value;
+    public string Key;
+    public string Value;
 
-   public IniLineTerminatorOption LineTerminator;
+    public IniLineTerminatorOption LineTerminator;
 
-   internal List<Lexer.IniTrivia> LeadingTrivia = new();
-   internal List<Lexer.IniTrivia> TrailingTrivia = new();
+    internal List<Lexer.IniTrivia> LeadingTrivia = new();
+    internal List<Lexer.IniTrivia> TrailingTrivia = new();
 
-   public IniProperty(string key, string value, IniLineTerminatorOption lineTerminator)
-   {
-       this.Key = key;
-       this.Value = value;
+    public IniProperty(string key, string value, IniLineTerminatorOption lineTerminator)
+    {
+        this.Key = key;
+        this.Value = value;
 
-       this.LineTerminator = lineTerminator;
-   }
+        this.LineTerminator = lineTerminator;
+    }
 
-   public string PropertyAndValueAsPropertyString()
-   {
-       var result = new StringBuilder();
+    public string PropertyAndValueAsPropertyString()
+    {
+        var result = new StringBuilder();
 
-       result.Append(this.Key);
-       result.Append('=');
-       result.Append(this.Value);
+        result.Append(this.Key);
+        result.Append('=');
+        result.Append(this.Value);
 
-       return result.ToString();
-   }
+        return result.ToString();
+    }
 
-   internal static IniProperty CreateFromLexeme(List<char> lexeme, IniLineTerminatorOption lineTerminator, List<Lexer.IniTrivia>? leadingTrivia = null, List<Lexer.IniTrivia>? trailingTrivia = null)
-   {
-       var propertyKeyAsChars = IniProperty.GetKeyFromPropertyLexeme(lexeme);
-       var propertyKeyAsString = new string(propertyKeyAsChars.ToArray());
-       //
-       var propertyValueAsChars = IniProperty.GetValueFromPropertyLexeme(lexeme);
-       var propertyValueAsString = new string(propertyValueAsChars.ToArray());
-       //
-       var result = new IniProperty(propertyKeyAsString, propertyValueAsString, lineTerminator)
-       {
-           LeadingTrivia = leadingTrivia ?? new List<Lexer.IniTrivia>(),
-           TrailingTrivia = trailingTrivia ?? new List<Lexer.IniTrivia>(),
-       };
-       return result;
-   }
+    internal static IniProperty CreateFromLexeme(List<char> lexeme, IniLineTerminatorOption lineTerminator, List<Lexer.IniTrivia>? leadingTrivia = null, List<Lexer.IniTrivia>? trailingTrivia = null)
+    {
+        var propertyKeyAsChars = IniProperty.GetKeyFromPropertyLexeme(lexeme);
+        var propertyKeyAsString = new string(propertyKeyAsChars.ToArray());
+        //
+        var propertyValueAsChars = IniProperty.GetValueFromPropertyLexeme(lexeme);
+        var propertyValueAsString = new string(propertyValueAsChars.ToArray());
+        //
+        var result = new IniProperty(propertyKeyAsString, propertyValueAsString, lineTerminator)
+        {
+            LeadingTrivia = leadingTrivia ?? new List<Lexer.IniTrivia>(),
+            TrailingTrivia = trailingTrivia ?? new List<Lexer.IniTrivia>(),
+        };
+        return result;
+    }
 
-   private static List<char> GetKeyFromPropertyLexeme(List<char> lexeme)
-   {
-       var indexOfEquals = lexeme.IndexOf('=');
-       if (indexOfEquals < 0)
-       {
-           // our caller should never call this function with an invalid lexeme (missing the equals sign); the lexer should never give us one that's invalid in this repsect
-           throw new InvalidOperationException();
-       }
+    private static List<char> GetKeyFromPropertyLexeme(List<char> lexeme)
+    {
+        var indexOfEquals = lexeme.IndexOf('=');
+        if (indexOfEquals < 0)
+        {
+            // our caller should never call this function with an invalid lexeme (missing the equals sign); the lexer should never give us one that's invalid in this repsect
+            throw new InvalidOperationException();
+        }
 
-       List<char> key = lexeme.GetRange(0, indexOfEquals);
-       return key;
-   }
+        List<char> key = lexeme.GetRange(0, indexOfEquals);
+        return key;
+    }
 
-   private static List<char> GetValueFromPropertyLexeme(List<char> lexeme)
-   {
-       var indexOfEquals = lexeme.IndexOf('=');
-       if (indexOfEquals < 0)
-       {
-           // our caller should never call this function with an invalid lexeme (missing the equals sign); the lexer should never give us one that's invalid in this repsect
-           throw new InvalidOperationException();
-       }
+    private static List<char> GetValueFromPropertyLexeme(List<char> lexeme)
+    {
+        var indexOfEquals = lexeme.IndexOf('=');
+        if (indexOfEquals < 0)
+        {
+            // our caller should never call this function with an invalid lexeme (missing the equals sign); the lexer should never give us one that's invalid in this repsect
+            throw new InvalidOperationException();
+        }
 
-       List<char> value = lexeme.GetRange(indexOfEquals + 1, lexeme.Count - indexOfEquals - 1);
-       return value;
-   }
+        List<char> value = lexeme.GetRange(indexOfEquals + 1, lexeme.Count - indexOfEquals - 1);
+        return value;
+    }
 }

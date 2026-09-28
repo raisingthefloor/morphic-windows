@@ -31,6 +31,6 @@ namespace Morphic.WindowsNative.Ini.Lexer;
 
 internal enum IniTriviaKind
 {
-   Comment,
-   Whitespace,
+    Comment,
+    Whitespace,
 }

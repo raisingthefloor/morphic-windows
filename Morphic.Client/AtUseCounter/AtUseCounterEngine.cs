@@ -1,4 +1,4 @@
-﻿// Copyright 2020-2025 Raising the Floor - US, Inc.
+﻿// Copyright 2020-2026 Raising the Floor - US, Inc.
 //
 // Licensed under the New BSD license. You may not use this file except in
 // compliance with this License.
@@ -30,7 +30,6 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Devices.Display.Core;
 
 namespace Morphic.Client.AtUseCounter;
 
@@ -150,7 +149,7 @@ internal class AtUseCounterEngine
           }
 
           // triggered when color filter IsActive is changed
-          Morphic.WindowsNative.Accessibility.ColorFilters.IsActiveChanged += AtUseCounterEngine.ColorFilters_IsActiveChanged;
+          Morphic.WindowsNative.Display.ColorFilters.IsActiveChanged += AtUseCounterEngine.ColorFilters_IsActiveChanged;
 
           // triggered when changed: dark mode on/off
           Morphic.WindowsNative.Theme.DarkMode.AppsUseDarkModeChanged += AtUseCounterEngine.DarkMode_DarkModeChanged;
@@ -445,7 +444,7 @@ internal class AtUseCounterEngine
 
           // color filters
           bool colorFiltersAreActive;
-          var getColorFiltersAreActiveResult = Morphic.WindowsNative.Accessibility.ColorFilters.GetIsActive();
+          var getColorFiltersAreActiveResult = Morphic.WindowsNative.Display.ColorFilters.GetIsActive();
           if (getColorFiltersAreActiveResult.IsError == true)
           {
                Debug.Assert(false, "Could not get initial color filters active state");
@@ -631,22 +630,24 @@ internal class AtUseCounterEngine
           _sequentialTaskFactory.StartNew(() => AtUseCounterEngine.CheckForHighContrastIsOnChange());
      }
 
-     static void ColorFilters_IsActiveChanged(object? sender, EventArgs e)
+     static void ColorFilters_IsActiveChanged(object? sender, Morphic.WindowsNative.Display.ColorFiltersIsActiveChangedEventArgs e)
      {
-          if (SHOW_EVENT_HANDLER_CALLS == true)
+        // OBSERVATION: we capture the color filters "is active" change here (via event args), so we really don't need to call CheckForColorFiltersAreActiveChange
+        if (SHOW_EVENT_HANDLER_CALLS == true)
           {
                Debug.WriteLine("ColorFilters_IsActiveChanged");
           }
           _sequentialTaskFactory.StartNew(() => AtUseCounterEngine.CheckForColorFiltersAreActiveChange());
      }
 
-     static void DarkMode_DarkModeChanged(object? sender, EventArgs e)
+     static void DarkMode_DarkModeChanged(object? sender, Morphic.WindowsNative.Theme.DarkModeChangedEventArgs e)
      {
-          if (SHOW_EVENT_HANDLER_CALLS == true)
-          {
-               Debug.WriteLine("DarkMode_DarkModeChanged");
-          }
-          _sequentialTaskFactory.StartNew(() => AtUseCounterEngine.CheckForDarkModeChange());
+        // OBSERVATION: we capture the dark mode change here (via event args), so we really don't need to call CheckForDarkModeChange
+        if (SHOW_EVENT_HANDLER_CALLS == true)
+        {
+            Debug.WriteLine("DarkMode_DarkModeChanged");
+        }
+        _sequentialTaskFactory.StartNew(() => AtUseCounterEngine.CheckForDarkModeChange());
      }
 
      static void NightLight_IsOnChanged(object? sender, EventArgs e)
@@ -1032,7 +1033,7 @@ internal class AtUseCounterEngine
 
      static void CheckForColorFiltersAreActiveChange()
      {
-          var getColorFiltersAreActiveResult = Morphic.WindowsNative.Accessibility.ColorFilters.GetIsActive();
+          var getColorFiltersAreActiveResult = Morphic.WindowsNative.Display.ColorFilters.GetIsActive();
           if (getColorFiltersAreActiveResult.IsError == true)
           {
                Debug.Assert(false, "Could not get the current color filters active state");

@@ -31,9 +31,9 @@ namespace Morphic.WindowsNative.Ini.Lexer;
 
 internal enum IniTokenKind
 {
-   Invalid,
+    Invalid,
 
-   Section,
-   Property,
-   EndOfFile,
+    Section,
+    Property,
+    EndOfFile,
 }

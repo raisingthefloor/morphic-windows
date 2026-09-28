@@ -28,8 +28,8 @@ namespace Morphic.WindowsNative.WindowsCoreAudio;
 // https://docs.microsoft.com/en-us/windows/win32/api/mmdeviceapi/ne-mmdeviceapi-edataflow
 internal enum EDataFlow : int
 {
-   eRender = 0,
-   eCapture = eRender + 1,
-   eAll = eCapture + 1 /*,
-   EDataFlow_enum_count = eAll + 1 */
+    eRender = 0,
+    eCapture = eRender + 1,
+    eAll = eCapture + 1 /*,
+    EDataFlow_enum_count = eAll + 1 */
 }

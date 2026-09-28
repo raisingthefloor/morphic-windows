@@ -30,39 +30,39 @@ namespace Morphic.WindowsNative.WindowsCoreAudio;
 
 internal class MMDevice
 {
-   private IMMDevice _immDevice;
+    private IMMDevice _immDevice;
 
-   private MMDevice(IMMDevice immDevice)
-   {
-       _immDevice = immDevice;
-   }
+    private MMDevice(IMMDevice immDevice)
+    {
+        _immDevice = immDevice;
+    }
 
-   internal static MMDevice CreateFromIMMDevice(IMMDevice immDevice)
-   {
-       var result = new MMDevice(immDevice);
-       //
-       return result;
-   }
+    internal static MMDevice CreateFromIMMDevice(IMMDevice immDevice)
+    {
+        var result = new MMDevice(immDevice);
+        //
+        return result;
+    }
 
-   public MorphicResult<Object, WindowsComError> Activate(Guid iid, CLSCTX clsCtx)
-   {
-       Object? @interface;
-       var result = _immDevice.Activate(iid, clsCtx, IntPtr.Zero, out @interface);
-       if (result != ExtendedPInvoke.S_OK)
-       {
-           // TODO: consider throwing more granular exceptions here
-           var comException = new COMException("IMMDeviceEnumerator.GetDefaultAudioEndpoint failed", Marshal.GetExceptionForHR(result));
-           return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
-       }
+    public MorphicResult<Object, WindowsComError> Activate(Guid iid, CLSCTX clsCtx)
+    {
+        Object? @interface;
+        var result = _immDevice.Activate(iid, clsCtx, IntPtr.Zero, out @interface);
+        if (result != ExtendedPInvoke.S_OK)
+        {
+            // TODO: consider throwing more granular exceptions here
+            var comException = new COMException("IMMDeviceEnumerator.GetDefaultAudioEndpoint failed", Marshal.GetExceptionForHR(result));
+            return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
+        }
 
-       if (@interface is null)
-       {
-           // NOTE: this code should never be executed since Activate should have returned an HRESULT of E_POINTER if it failed
-           var comException = new COMException("IMMDevice.Activate returned a null pointer", new NullReferenceException());
-           return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
-       }
+        if (@interface is null)
+        {
+            // NOTE: this code should never be executed since Activate should have returned an HRESULT of E_POINTER if it failed
+            var comException = new COMException("IMMDevice.Activate returned a null pointer", new NullReferenceException());
+            return MorphicResult.ErrorResult(WindowsComError.ComException(comException));
+        }
 
-       return MorphicResult.OkResult(@interface!);
-   }
+        return MorphicResult.OkResult(@interface!);
+    }
 
 }

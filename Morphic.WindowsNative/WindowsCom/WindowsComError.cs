@@ -30,18 +30,18 @@ namespace Morphic.WindowsNative.WindowsCom;
 // NOTE: this type is designed to be returned as the Error type in MorphicResult<TResult, Win32ApiError> function results
 public record WindowsComError : MorphicAssociatedValueEnum<WindowsComError.Values>
 {
-   // enum members
-   public enum Values
-   {
-       ComException/*(COMException ex)*/
-   }
+    // enum members
+    public enum Values
+    {
+        ComException/*(COMException ex)*/
+    }
 
-   // functions to create member instances
-   public static WindowsComError ComException(COMException comException) => new(Values.ComException) { Exception = comException };
+    // functions to create member instances
+    public static WindowsComError ComException(COMException comException) => new(Values.ComException) { Exception = comException };
 
-   // associated values
-   public COMException? Exception { get; private set; }
+    // associated values
+    public COMException? Exception { get; private set; }
 
-   // verbatim required constructor implementation for MorphicAssociatedValueEnums
-   private WindowsComError(Values value) : base(value) { }
+    // verbatim required constructor implementation for MorphicAssociatedValueEnums
+    private WindowsComError(Values value) : base(value) { }
 }

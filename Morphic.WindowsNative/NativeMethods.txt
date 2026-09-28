@@ -26,6 +26,7 @@ RegOpenKeyEx
 RegQueryValueEx
 RegSetValueEx
 SendInput
+SendMessageTimeout
 SendNotifyMessage
 SetCursorPos
 SystemParametersInfo
@@ -46,6 +47,7 @@ HKEY_CURRENT_CONFIG
 HKEY_CURRENT_USER
 HKEY_LOCAL_MACHINE
 HKEY_USERS
+HWND_BROADCAST
 MAX_PATH
 SE_ERR_ACCESSDENIED
 SE_ERR_FNF
@@ -54,4 +56,4 @@ SE_ERR_OOM
 SE_ERR_PNF
 S_OK
 WM_CLOSE
-
+WM_WININICHANGE

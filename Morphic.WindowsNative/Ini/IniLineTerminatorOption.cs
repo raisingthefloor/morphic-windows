@@ -31,10 +31,10 @@ namespace Morphic.WindowsNative.Ini;
 
 public enum IniLineTerminatorOption
 {
-   None,
-   Cr,
-   CrLf,
-   Lf,
-   //
-   UseDefault,
+    None,
+    Cr,
+    CrLf,
+    Lf,
+    //
+    UseDefault,
 }

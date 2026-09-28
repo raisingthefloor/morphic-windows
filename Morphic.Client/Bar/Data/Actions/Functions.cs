@@ -1188,7 +1188,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 // set system dark/light theme
                 //
                 // implementation option 1: use SystemSettings
-                _ = await Morphic.WindowsNative.Theme.DarkMode.SetSystemUsesDarkModeAsync(state);
+                _ = await Morphic.WindowsNative.Theme.DarkMode.SetSystemUsesDarkModeAndBroadcastChangeMessageAsync(state);
                 //
                 // implementation option 2: use registry setting (NOTE: may require follow-up theme change notification broadcast message)
                 //Setting systemThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeSystem);
@@ -1197,7 +1197,7 @@ namespace Morphic.Client.Bar.Data.Actions
                 // set apps dark/light theme
                 //
                 // implementation option 1: use SystemSettings
-                _ = await Morphic.WindowsNative.Theme.DarkMode.SetAppsUseDarkModeAsync(state);
+                _ = await Morphic.WindowsNative.Theme.DarkMode.SetAppsUseDarkModeAndBroadcastChangeMessageAsync(state);
                 //
                 // implementation option 2: use registry setting (NOTE: may require follow-up theme change notification broadcast message)
                 //Setting appsThemeSetting = App.Current.MorphicSession.Solutions.GetSetting(SettingId.LightThemeApps);
