@@ -1896,6 +1896,15 @@ public partial class App : Application
         Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.ScreensaverUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
         Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.VisualStyleUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
         Morphic.WindowsNative.UserPreferences.UserPreferenceListener.Shared.WindowUserPreferenceChanged += this.SystemEventsOnDisplaySettingsChanged;
+        //
+        // NOTE: the user preference events above fire only when Windows broadcasts a settings change message, and Windows doesn't always broadcast one (Windows
+        //       Settings broadcasts nothing when the user turns color filters or night light on or off, for example); without another trigger, those bar buttons
+        //       would only catch up when the mouse enters the bar, so we also watch dark mode, color filters and night light directly (these watchers fire on
+        //       every change, whether or not it was broadcast)
+        Morphic.WindowsNative.Theme.DarkMode.AppsUseDarkModeChanged += this.WatchedSettingChanged;
+        Morphic.WindowsNative.Theme.DarkMode.SystemUsesDarkModeChanged += this.WatchedSettingChanged;
+        Morphic.WindowsNative.Display.ColorFilters.IsActiveChanged += this.WatchedSettingChanged;
+        Morphic.WindowsNative.Display.NightLight.IsOnChanged += this.WatchedSettingChanged;
 
         SystemEvents.SessionEnding += SystemEvents_SessionEnding;
 
@@ -1930,6 +1939,13 @@ public partial class App : Application
     {
         // Wait a bit, to see if any other events have been raised.
         this.systemSettingTimer?.Start();
+    }
+
+    // NOTE: the setting watchers raise their events on thread pool threads, but our timer belongs to the UI thread
+    private void WatchedSettingChanged(object? sender, EventArgs e)
+    {
+        // Wait a bit, to see if any other events have been raised.
+        _ = this.Dispatcher.InvokeAsync(() => this.systemSettingTimer?.Start());
     }
 
     private async void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)

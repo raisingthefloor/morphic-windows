@@ -30,7 +30,24 @@
 	        <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
 	        	<RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
 	        </Property>
-        	<Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19045)" Message="!(loc.MinimumOsError)" />
+	        <!-- NOTE: UBR (update build revision) is the last component of the Windows version (e.g. the 6456 in 10.0.19045.6456); it is a
+	                   REG_DWORD, which a raw registry search returns as "#" followed by the decimal number (e.g. "#6456") -->
+	        <Property Id="WINDOWSUBR" Secure="yes">
+	        	<RegistrySearch Id="UpdateBuildRevisionSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="UBR" Type="raw" />
+	        </Property>
+	        <!-- NOTE: the .NET 10 runtime cannot start on a Windows 10 22H2 computer which has not installed its Windows updates (at build
+	                   19045.2006 the x64 build of Morphic crashes inside the runtime's startup code, before any of Morphic's code runs); we
+	                   therefore require Windows 11 (build > 19045) or Windows 10 22H2 (build 19045) with UBR >= 6456 (i.e. the October 2025
+	                   update, the last cumulative update before the end of support of Windows 10) -->
+	        <!-- NOTE: "Installed OR" exempts uninstall, repair and modify from the check -->
+	        <!-- NOTE: WINDOWSUBR starts with "#", so it cannot be compared to a number; we compare it to the string "#6456" instead. String
+	                   order equals numeric order as long as both values have the same number of digits, and on build 19045 the UBR has had
+	                   four digits since the first release (2006). Windows 11 never reaches these comparisons. -->
+	        <!-- NOTE: a UBR of 10000 or more compares as lower than "#6456" (its first digit is lower), so we also accept every UBR which
+	                   starts with "1" (<< is the "starts with" operator): the UBR of build 19045 grows by about 120 per month, so
+	                   computers which receive Extended Security Updates reach 10000 in 2028. On build 19045 a UBR which starts with 1
+	                   has five digits; the one exception is the preview builds of mid-2022 (e.g. 19045.1865), which are accepted too. -->
+        	<Launch Condition="Installed OR (WINDOWSBUILDNUMBER &gt; 19045) OR (WINDOWSBUILDNUMBER = 19045 AND (WINDOWSUBR &gt;= &quot;#6456&quot; OR WINDOWSUBR &lt;&lt; &quot;#1&quot;))" Message="!(loc.MinimumOsError)" />
 	</Package>
 
 	<Fragment>
